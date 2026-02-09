@@ -1,1164 +1,532 @@
 <!DOCTYPE html>
-<html lang="ko" style="scroll-behavior: smooth;">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>스승님 - 맞춤 골프레슨 매칭 서비스</title>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스승님 X 서수연 프로 숏게임 클래스</title>
 
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Font -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Pretendard:wght@100;400;700;900&display=swap"
-      rel="stylesheet"
-    />
+  <!-- Pretendard -->
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 
-    <!-- Tailwind Config -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              "brand-blue": "#0066FF",
-            },
-          },
-        },
-      };
-    </script>
+  <style>
+    body {
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+        "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      background: #f8fafc;
+      overflow-x: hidden;
+    }
+    .aspect-4-5 { aspect-ratio: 4 / 5; }
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    .floating { animation: float 3s ease-in-out infinite; }
+  </style>
 
-    <style>
-      body {
-        font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
-          "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
-          "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
-        background-color: #ffffff;
-        color: #1a1a1a;
-        -webkit-font-smoothing: antialiased;
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+        "@google/genai": "https://esm.sh/@google/genai@1.40.0"
       }
+    }
+  </script>
+</head>
 
-      .clay-card {
-        background: #ffffff;
-        border-radius: 2rem;
-        box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
-      }
+<body>
+  <div id="root"></div>
 
-      .clay-icon {
-        background: #f0f4ff;
-        box-shadow: inset 5px 5px 10px #e0e7ff, inset -5px -5px 10px #ffffff;
-        border-radius: 1.5rem;
-      }
+  <script type="module">
+    import React, { useEffect, useMemo, useCallback, useState } from "react";
+    import { createRoot } from "react-dom/client";
+    import { GoogleGenAI } from "@google/genai";
 
-      ::selection {
-        background: rgba(0, 102, 255, 0.1);
-        color: #0066ff;
-      }
-    </style>
+    const h = React.createElement;
 
-    <!-- ESM import map -->
-    <script type="importmap">
+    /**
+     * =========================
+     * 1) 카드 데이터 (8페이지)
+     * =========================
+     * - JSX 없이 쓰기 위해 titleLines / highlightText 등을 분리
+     */
+    const CARD_PAGES = [
       {
-        "imports": {
-          "react": "https://esm.sh/react@19.2.3",
-          "react-dom/client": "https://esm.sh/react-dom@19.2.3/client",
-          "lucide-react": "https://esm.sh/lucide-react@0.562.0"
-        }
+        id: 1,
+        subtitle: "2026 시즌 대비",
+        titleLines: ["숏게임만 잡아도"],
+        highlightText: "10타는 줄일 수 있습니다",
+        highlightClass: "text-blue-600 font-extrabold",
+        descriptionLines: ["스승님 X 서수연 프로"],
+        backgroundImagePrompt:
+          "Realistic 3D human render of a beautiful Korean female golf pro in elegant sky-blue golf wear, celebrating with a bright smile. Clean minimalist white and very light sky-blue gradient background. No complex scenery. Only small 3D golf elements like a single golf ball and a minimalist hole cup floating. High-end startup advertising style, characters fully inside frame, 4:5 aspect ratio."
+      },
+      {
+        id: 2,
+        subtitle: "숏게임 하나로 5타 이상 감량",
+        titleLines: ["드라이버 잘 쳐놓고", "그린 주변에서 까먹는 스코어.."],
+        emphasizeText: "너무 열받지 않으세요?",
+        emphasizeClass: "text-red-500",
+        descriptionLines: ["연습장에서는 프로,", "필드에서는 백돌이."],
+        backgroundImagePrompt:
+          "Realistic 3D human render. An amateur male golfer looking frustrated, scratching his head. Beside him, a beautiful Korean female golf pro in premium attire looks professional and encouraging. Minimalist white and light blue gradient background. Small minimal 3D golf ball near a hole cup icon. No landscape. Characters fully inside frame, 4:5 aspect ratio."
+      },
+      {
+        id: 3,
+        subtitle: "어프로치 · 벙커 · 퍼팅",
+        titleLines: ["서수연 프로", "숏게임 클래스"],
+        descriptionLines: ["실전만 집중하는 2시간"],
+        backgroundImagePrompt:
+          "Realistic 3D human render of a beautiful Korean female golf pro demonstrating a perfect swing posture with a wedge. Minimalist white and light sky-blue background. A tiny patch of 3D green grass at the bottom. No trees or sky. Modern startup ad look, characters fully inside frame, 4:5 aspect ratio."
+      },
+      {
+        id: 4,
+        titleLines: ["클래스 핵심 포인트"],
+        points: ["이론 최소화, 실전 위주", "현장 실전 감각 집중", "소수정예 단독 진행", "날짜 직접 선택 가능"],
+        backgroundImagePrompt:
+          "Realistic 3D render. A minimalist 3D training board with colorful swing path arrows. Beside it, a beautiful Korean female pro points at the board. Clean white and light blue gradient background. No complex scenery. Professional and clean, characters fully inside frame, 4:5 aspect ratio."
+      },
+      {
+        id: 5,
+        titleLines: ["혜택 안내 (1~3)"],
+        points: ["만족도 100%, 불만족 시 환불", "프라이빗 소수 특별 실전 레슨", "연인·가족과 함께 원하는 날짜 참여"],
+        backgroundImagePrompt:
+          "Realistic 3D high-end render. Floating premium 3D coupon icons and golden ticket symbols. The beautiful Korean female pro stands elegantly in the center. Clean white and soft sky-blue background. No landscape. Minimalist luxury ad style, 4:5 aspect ratio."
+      },
+      {
+        id: 6,
+        titleLines: ["검증된 수강 데이터"],
+        points: ["1월 숏게임 레슨 21건 진행", "1:1 담당자 맞춤 절차 및 상담", "리드폼 제출 → 날짜 조율 → 레슨"],
+        backgroundImagePrompt:
+          "Realistic 3D render of a group of satisfied amateur golfers (male and female) smiling. Speech bubbles with checkmarks float near them. The elegant pro coach is in the center. Minimalist white and sky-blue gradient background. No grass or trees. 4:5 aspect ratio."
+      },
+      {
+        id: 7,
+        titleLines: ["간편한 신청 방법"],
+        descriptionLines: [
+          "하단 [신청하기] 클릭 →",
+          "카카오톡 채널 채팅 연결",
+          "",
+          "원하시는 날짜를 말씀주시면",
+          "레슨 일정을 잡아드립니다."
+        ],
+        backgroundImagePrompt:
+          "Realistic 3D close-up. Hands holding a minimalist white smartphone showing soft blurred KakaoTalk chat bubbles. The beautiful Korean pro is visible in the background smiling. Clean white and light blue gradient background. Characters fully inside frame, 4:5 aspect ratio."
+      },
+      {
+        id: 8,
+        subtitle: "숏게임이 바뀌면 골프가 달라집니다.",
+        titleLines: ["지금 바로 신청하세요"],
+        hasCta: true,
+        backgroundImagePrompt:
+          "Realistic 3D close-up. A minimalist white golf ball rolling perfectly into a hole cup. Clean white and light sky-blue gradient background. No landscape or sky. Triumphant and clean advertising aesthetic, 4:5 aspect ratio."
       }
-    </script>
-  </head>
+    ];
 
-  <body class="overflow-x-hidden">
-    <div id="root"></div>
+    /**
+     * =========================
+     * 2) Gemini 이미지 생성
+     * =========================
+     * - 브라우저 HTML에서 process.env.API_KEY는 없음.
+     * - 사용자가 상단 입력창에 키를 넣거나, localStorage에 저장.
+     */
+    async function generateCardImage(apiKey, prompt) {
+      if (!apiKey) return null;
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash-image",
+          contents: { parts: [{ text: prompt }] },
+          config: { imageConfig: { aspectRatio: "4:5" } }
+        });
 
-    <script type="module">
-      import React from "react";
-      import { createRoot } from "react-dom/client";
-      import {
-        Smartphone,
-        HelpCircle,
-        CheckCircle2,
-        Filter,
-        ArrowRight,
-        PenLine,
-        BadgeCheck,
-        X,
-        TrendingUp,
-        Award,
-        ShieldCheck,
-        MessageCircle
-      } from "lucide-react";
+        const candidate = response?.candidates?.[0];
+        const parts = candidate?.content?.parts || [];
+        for (const part of parts) {
+          if (part.inlineData) {
+            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          }
+        }
+        return null;
+      } catch (e) {
+        console.error("Gemini Image Generation Error:", e);
+        return null;
+      }
+    }
 
-      const KAKAO_CHAT_URL = "http://pf.kakao.com/_kxawRn/chat";
+    /**
+     * =========================
+     * 3) UI 컴포넌트
+     * =========================
+     */
+    function renderLines(lines, className = "") {
+      if (!lines || !lines.length) return null;
+      const children = [];
+      lines.forEach((line, idx) => {
+        children.push(h("span", { key: `l-${idx}`, className }, line));
+        if (idx < lines.length - 1) children.push(h("br", { key: `br-${idx}` }));
+      });
+      return h("span", null, ...children);
+    }
 
-      /**
-       * Header
-       */
-      const Header = () =>
-        React.createElement(
-          "header",
-          {
-            className:
-              "fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100",
-          },
-          React.createElement(
-            "div",
-            {
-              className:
-                "max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between",
-            },
-            React.createElement(
-              "div",
-              { className: "flex items-center gap-2" },
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "w-8 h-8 bg-brand-blue rounded-lg flex items-center justify-center text-white font-black italic text-sm",
-                },
-                "S"
-              ),
-              React.createElement(
-                "span",
-                { className: "text-xl font-black tracking-tighter" },
-                "스승님"
-              )
-            ),
-            React.createElement(
-              "nav",
-              {
-                className:
-                  "hidden md:flex items-center gap-8 text-sm font-bold text-gray-500",
-              },
-              React.createElement(
-                "a",
-                {
-                  href: "#features",
-                  className: "hover:text-brand-blue transition-colors",
-                },
-                "매칭방식"
-              ),
-              React.createElement(
-                "a",
-                {
-                  href: "#workflow",
-                  className: "hover:text-brand-blue transition-colors",
-                },
-                "이용안내"
-              ),
-              React.createElement(
-                "a",
-                {
-                  href: "#cases",
-                  className: "hover:text-brand-blue transition-colors",
-                },
-                "사례보기"
-              ),
-              React.createElement(
-                "a",
-                {
-                  href: "#trust",
-                  className: "hover:text-brand-blue transition-colors",
-                },
-                "운영정책"
-              )
-            ),
-            React.createElement(
-              "a",
-              {
-                href: KAKAO_CHAT_URL,
-                className:
-                  "bg-brand-blue text-white px-5 py-2 rounded-full font-bold text-sm hover:scale-105 transition-transform active:scale-95",
-              },
-              "요청 레슨 상담하기"
-            )
-          )
-        );
-
-      /**
-       * Hero
-       * FIX:
-       * - 모바일에서 안 잘리게: flex/items-center 제거
-       * - 카드 아래 강제 여백 추가 (h-24)
-       * - 초록 체크 뱃지는 모바일에서 카드 안쪽(top-2 right-2)으로 이동
-       */
-      const HeroSection = () =>
-        React.createElement(
-          "section",
-          {
-            className:
-              "relative px-6 pt-24 md:pt-32 pb-32 md:pb-20 bg-white overflow-hidden",
-          },
-          React.createElement(
-            "div",
-            {
-              className:
-                "max-w-screen-xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-12 items-start",
-            },
-
-            // Left (Text)
-            React.createElement(
-              "div",
-              { className: "text-center md:text-left order-2 md:order-1" },
-
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "inline-block px-4 py-1 mb-5 bg-blue-50 text-brand-blue font-black rounded-full text-sm",
-                },
-                "📍 현재 강남·서초 전담 운영 중"
-              ),
-
-              React.createElement(
-                "h1",
-                {
-                  className:
-                    "text-4xl md:text-6xl font-black leading-[1.15] mb-3 tracking-tight",
-                },
-                "맞춤 요청 골프레슨",
-                React.createElement("br"),
-                React.createElement(
-                  "span",
-                  { className: "text-brand-blue" },
-                  "매칭 서비스"
-                )
-              ),
-
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "mt-2 mb-6 text-sm md:text-base font-black text-gray-500",
-                },
-                "현재 서비스 지역: ",
-                React.createElement(
-                  "span",
-                  { className: "text-brand-blue" },
-                  "강남 · 서초"
-                )
-              ),
-
-              React.createElement(
-                "p",
-                {
-                  className:
-                    "text-gray-500 text-lg md:text-2xl font-medium mb-7",
-                },
-                "내가 필요한 레슨을 먼저 정하고,",
-                React.createElement("br", { className: "hidden md:block" }),
-                "필요한 만큼 배우세요"
-              ),
-
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "flex flex-col sm:flex-row gap-3 md:gap-4 mb-8 md:mb-12 justify-center md:justify-start",
-                },
-                React.createElement(
-                  "span",
-                  {
-                    className:
-                      "text-sm md:text-base font-bold bg-gray-100 px-4 py-2 rounded-full",
-                  },
-                  "무작위 제안 ❌"
-                ),
-                React.createElement(
-                  "span",
-                  {
-                    className:
-                      "text-sm md:text-base font-bold bg-blue-100 text-brand-blue px-4 py-2 rounded-full",
-                  },
-                  "1:1 전담 매칭 ⭕"
-                )
-              ),
-
-              React.createElement(
-                "div",
-                { className: "hidden md:block" },
-                React.createElement(
-                  "a",
-                  {
-                    href: KAKAO_CHAT_URL,
-                    className:
-                      "inline-flex items-center gap-2 bg-brand-blue text-white px-8 py-4 rounded-2xl font-black text-xl shadow-xl hover:translate-y-[-4px] transition-all",
-                  },
-                  "전문 레슨 매칭 요청하기 →"
-                )
-              )
-            ),
-
-            // Right (Card)
-            React.createElement(
-              "div",
-              { className: "relative order-1 md:order-2 flex justify-center" },
-
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "clay-card p-5 md:p-10 border-8 border-brand-blue/5 transform rotate-[-3deg] w-full max-w-sm h-[420px] md:aspect-[4/5] md:h-auto flex flex-col",
-                },
-
-                React.createElement(
-                  "div",
-                  { className: "flex items-center justify-between mb-5 md:mb-8" },
-                  React.createElement(Smartphone, {
-                    className: "text-brand-blue w-7 h-7 md:w-8 md:h-8",
-                  }),
-                  React.createElement("div", {
-                    className: "h-2 w-20 bg-gray-200 rounded-full",
-                  })
-                ),
-
-                React.createElement(
-                  "div",
-                  { className: "space-y-4 md:space-y-6 flex-grow" },
-
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "h-14 md:h-16 w-full bg-blue-50 rounded-2xl flex items-center px-5 md:px-6",
-                    },
-                    React.createElement(
-                      "span",
-                      {
-                        className:
-                          "text-sm md:text-base font-bold text-brand-blue",
-                      },
-                      "요청서: 아이언 생크 교정"
-                    )
-                  ),
-
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "w-full bg-gray-50 rounded-2xl border border-gray-200 p-5 flex flex-col gap-4",
-                    },
-
-                    React.createElement(
-                      "div",
-                      { className: "flex items-center justify-between" },
-                      React.createElement(
-                        "span",
-                        {
-                          className:
-                            "text-xs font-black text-brand-blue bg-blue-100 px-3 py-1 rounded-full",
-                        },
-                        "🔔 프로 확인 중"
-                      ),
-                      React.createElement(
-                        "span",
-                        { className: "text-xs font-bold text-gray-400" },
-                        "강남·서초 전담"
-                      )
-                    ),
-
-                    React.createElement(
-                      "div",
-                      {
-                        className:
-                          "grid grid-cols-2 gap-3 text-sm font-bold text-gray-700",
-                      },
-
-                      React.createElement(
-                        "div",
-                        {
-                          className:
-                            "bg-white rounded-xl p-3 border border-gray-100",
-                        },
-                        React.createElement(
-                          "div",
-                          {
-                            className:
-                              "text-xs text-gray-400 font-black mb-1",
-                          },
-                          "지역"
-                        ),
-                        "서초구 방배동"
-                      ),
-                      React.createElement(
-                        "div",
-                        {
-                          className:
-                            "bg-white rounded-xl p-3 border border-gray-100",
-                        },
-                        React.createElement(
-                          "div",
-                          {
-                            className:
-                              "text-xs text-gray-400 font-black mb-1",
-                          },
-                          "레벨"
-                        ),
-                        "90타대"
-                      ),
-                      React.createElement(
-                        "div",
-                        {
-                          className:
-                            "bg-white rounded-xl p-3 border border-gray-100 col-span-2",
-                        },
-                        React.createElement(
-                          "div",
-                          {
-                            className:
-                              "text-xs text-gray-400 font-black mb-1",
-                          },
-                          "고민"
-                        ),
-                        "아이언 생크 / 방향성 불안"
-                      ),
-                      React.createElement(
-                        "div",
-                        {
-                          className:
-                            "bg-white rounded-xl p-3 border border-gray-100",
-                        },
-                        React.createElement(
-                          "div",
-                          {
-                            className:
-                              "text-xs text-gray-400 font-black mb-1",
-                          },
-                          "횟수"
-                        ),
-                        "3회"
-                      ),
-                      React.createElement(
-                        "div",
-                        {
-                          className:
-                            "bg-white rounded-xl p-3 border border-gray-100",
-                        },
-                        React.createElement(
-                          "div",
-                          {
-                            className:
-                              "text-xs text-gray-400 font-black mb-1",
-                          },
-                          "예산"
-                        ),
-                        "30만원"
-                      )
-                    ),
-
-                    React.createElement(
-                      "div",
-                      {
-                        className:
-                          "text-xs font-bold text-gray-500 leading-relaxed bg-white/60 rounded-xl p-3 border border-gray-100",
-                      },
-                      "요청서 확인 후, 요청에 맞는 전문 스승님만 연결합니다."
-                    )
-                  )
-                )
-              ),
-
-              // ✅ FIX: 모바일에서 카드 밖으로 나가지 않게 top/right 조정
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "absolute top-2 right-2 md:-top-10 md:right-0 clay-icon w-16 h-16 md:w-28 md:h-28 flex items-center justify-center bg-white shadow-2xl md:rotate-[12deg] z-10",
-                },
-                React.createElement(CheckCircle2, {
-                  className: "text-green-500 w-9 h-9 md:w-12 md:h-12",
-                })
-              )
-            )
-          ),
-
-          // ✅ FIX: 모바일에서 아래 콘텐츠(타이틀/버튼) 안 잘리게 강제 여백
-          React.createElement("div", { className: "h-24 md:h-0" })
-        );
-
-      /**
-       * Empathy
-       */
-      const EmpathySection = () =>
-        React.createElement(
-          "section",
-          { className: "px-6 py-20 md:py-24 bg-gray-50 text-center" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(HelpCircle, {
-              className:
-                "w-16 h-16 md:w-20 md:h-20 text-brand-blue mx-auto mb-7 opacity-80",
-            }),
-            React.createElement(
-              "h2",
-              { className: "text-3xl md:text-5xl font-black leading-[1.4]" },
-              "“레슨, 왜 늘",
-              React.createElement("br"),
-              "돈이 아깝고 늘지 않을까요?”"
-            )
-          )
-        );
-
-      /**
-       * Checklist
-       */
-      const ChecklistSection = () => {
-        const items = [
-          "레슨권을 날려서 돈이 아깝다고 느꼈던 경험",
-          "10회 레슨 등록을 권유받아 부담됐던 경험",
-          "나한테 맞는 전문 프로를 고르기 어려웠던 경험",
-          "여러 명에게 동시에 연락 오는 게 불편했던 경험",
-        ];
-
-        return React.createElement(
-          "section",
-          { className: "px-6 py-20 md:py-24 bg-white" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(
-              "h3",
-              {
-                className:
-                  "text-2xl md:text-4xl font-black mb-12 md:mb-16 text-center",
-              },
-              "혹시, 이런 경험 있으셨나요?"
-            ),
-            React.createElement(
-              "div",
-              { className: "grid md:grid-cols-2 gap-6" },
-              items.map((item, idx) =>
-                React.createElement(
-                  "div",
-                  {
-                    key: idx,
-                    className:
-                      "clay-card p-8 flex items-start gap-6 hover:translate-y-[-8px] transition-all hover:shadow-2xl",
-                  },
-                  React.createElement(CheckCircle2, {
-                    className: "text-red-400 shrink-0 mt-1",
-                    size: 32,
-                  }),
-                  React.createElement(
-                    "p",
-                    {
-                      className:
-                        "font-bold text-lg md:text-xl text-gray-700 leading-snug",
-                    },
-                    item
-                  )
-                )
-              )
-            )
-          )
-        );
-      };
-
-      /**
-       * Difference
-       */
-      const DifferenceSection = () =>
-        React.createElement(
-          "section",
-          {
-            id: "features",
-            className:
-              "px-6 py-24 md:py-32 bg-brand-blue text-white text-center overflow-hidden relative",
-          },
-          React.createElement(
-            "div",
-            {
-              className:
-                "absolute top-0 right-0 opacity-10 transform translate-x-1/4 translate-y-[-1/4] pointer-events-none",
-            },
-            React.createElement(Filter, { size: 600, strokeWidth: 1 })
-          ),
-          React.createElement(
-            "div",
-            { className: "max-w-screen-md mx-auto relative z-10" },
-            React.createElement(
-              "h2",
-              {
-                className:
-                  "text-3xl md:text-5xl font-black mb-7 md:mb-8 leading-tight",
-              },
-              "“레슨이 아니라,",
-              React.createElement("br"),
-              "‘매칭 방식’이 문제였습니다.”"
-            ),
-            React.createElement(
-              "p",
-              {
-                className:
-                  "text-blue-100 text-lg md:text-2xl font-medium leading-relaxed",
-              },
-              "스승님은 프로를 나열하지 않습니다.",
-              React.createElement("br"),
-              "골퍼의 요청을 먼저 받고, 조건이 맞는 스승님만 연결합니다."
-            )
-          )
-        );
-
-      /**
-       * Summary
-       */
-      const SummarySection = () =>
-        React.createElement(
-          "section",
-          { id: "workflow", className: "px-6 py-24 md:py-32 bg-white" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(
-              "div",
-              { className: "grid md:grid-cols-3 gap-12 relative" },
-              [
-                {
-                  step: "01",
-                  title: "요청서 작성",
-                  desc: "나의 고민 문제와 금액을 설정",
-                  icon: React.createElement(PenLine, { size: 40 }),
-                },
-                {
-                  step: "02",
-                  title: "전담 담당자 확인",
-                  desc: "요청서 분석 및 최적 스승님 선별",
-                  icon: React.createElement(BadgeCheck, { size: 40 }),
-                },
-                {
-                  step: "03",
-                  title: "매칭 및 상담",
-                  desc: "조건 맞는 스승님만 연결",
-                  icon: React.createElement(ArrowRight, { size: 40 }),
-                },
-              ].map((item, idx) =>
-                React.createElement(
-                  "div",
-                  {
-                    key: idx,
-                    className:
-                      "flex flex-col items-center text-center relative group",
-                  },
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "clay-icon w-28 h-28 md:w-32 md:h-32 flex items-center justify-center text-brand-blue bg-blue-50 mb-6 group-hover:scale-110 transition-transform",
-                    },
-                    item.icon
-                  ),
-                  React.createElement(
-                    "span",
-                    { className: "text-brand-blue font-black text-lg mb-2" },
-                    item.step
-                  ),
-                  React.createElement(
-                    "h4",
-                    { className: "text-2xl font-black mb-3" },
-                    item.title
-                  ),
-                  React.createElement(
-                    "p",
-                    { className: "text-gray-400 font-bold" },
-                    item.desc
-                  ),
-                  idx < 2
-                    ? React.createElement("div", {
-                        className:
-                          "hidden md:block absolute top-16 -right-6 w-12 h-0.5 bg-gray-100",
-                      })
-                    : null
-                )
-              )
-            )
-          )
-        );
-
-      /**
-       * Comparison
-       */
-      const ComparisonSection = () =>
-        React.createElement(
-          "section",
-          { className: "px-6 py-24 md:py-32 bg-gray-50" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(
-              "div",
-              { className: "text-center mb-12 md:mb-16" },
-              React.createElement(
-                "h3",
-                { className: "text-3xl md:text-4xl font-black" },
-                "무엇이 다른가요?"
-              )
-            ),
-            React.createElement(
-              "div",
-              { className: "grid md:grid-cols-2 gap-8 lg:gap-16" },
-
-              React.createElement(
-                "div",
-                { className: "clay-card p-10 bg-white/50 opacity-60" },
-                React.createElement(
-                  "h4",
-                  {
-                    className:
-                      "text-center font-black text-gray-400 text-2xl mb-10 underline decoration-gray-200 underline-offset-8",
-                  },
-                  "기존 레슨 앱"
-                ),
-                React.createElement(
-                  "div",
-                  { className: "space-y-6" },
-                  [
-                    "여러 명에게서 동시 연락 💣",
-                    "상황을 매번 처음부터 설명 🔄",
-                    "10회 등록 압박이 심함 💸",
-                    "프로를 비교하고 선택 불편 🤯",
-                  ].map((v, i) =>
-                    React.createElement(
-                      "div",
-                      {
-                        key: i,
-                        className:
-                          "flex items-center gap-4 text-gray-400 font-bold text-lg",
-                      },
-                      React.createElement(X, { className: "shrink-0" }),
-                      " ",
-                      v
-                    )
-                  )
-                )
-              ),
-
-              React.createElement(
-                "div",
-                { className: "clay-card p-10 border-4 border-brand-blue/10 bg-white" },
-                React.createElement(
-                  "h4",
-                  {
-                    className:
-                      "text-center font-black text-brand-blue text-2xl mb-10 underline decoration-blue-100 underline-offset-8",
-                  },
-                  "스승님"
-                ),
-                React.createElement(
-                  "div",
-                  { className: "space-y-6" },
-                  [
-                    "요청서 기반으로 담당자 연락 ✅",
-                    "담당자가 1:1로 맞춤 관리 ✨",
-                    "필요한 횟수만큼만 수강 💎",
-                    "1회 진행 후 레슨슨 결정 🤝",
-                  ].map((v, i) =>
-                    React.createElement(
-                      "div",
-                      {
-                        key: i,
-                        className:
-                          "flex items-center gap-4 text-gray-800 font-bold text-lg",
-                      },
-                      React.createElement(CheckCircle2, {
-                        className: "text-brand-blue shrink-0",
-                      }),
-                      " ",
-                      v
-                    )
-                  )
-                )
-              )
-            )
-          )
-        );
-
-      /**
-       * Case Study
-       */
-      const CaseStudySection = () => {
-        const cases = [
-          {
-            text: "“아이언만 치면 생크가 납니다. 장기 등록 말고 2~3번만 제대로 봐주실 분?”",
-            result: "레슨 3회 만에 문제 해결",
-            icon: React.createElement(Smartphone, {
-              className: "text-brand-blue",
-            }),
-          },
-          {
-            text: "“드라이버 비거리 때문에 스트레스입니다. 딱 5번만 집중적으로 보고 싶어요.”",
-            result: "5회 레슨 후 비거리 30m 증가",
-            icon: React.createElement(TrendingUp, {
-              className: "text-green-500",
-            }),
-          },
-          {
-            text: "“필드에서 우드를 제대로 쓰고 싶어요. 우드 레슨 전문 스승님을 찾고 있습니다.”",
-            result: "필드 활용도 개선, 미스샷 감소",
-            icon: React.createElement(Award, { className: "text-orange-500" }),
-          },
-        ];
-
-        return React.createElement(
-          "section",
-          { id: "cases", className: "px-6 py-24 md:py-32 bg-white" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(
-              "h3",
-              {
-                className:
-                  "text-3xl md:text-4xl font-black mb-12 md:mb-16 text-center",
-              },
-              "성공적인 매칭 사례"
-            ),
-            React.createElement(
-              "div",
-              { className: "grid md:grid-cols-3 gap-8" },
-              cases.map((c, i) =>
-                React.createElement(
-                  "div",
-                  {
-                    key: i,
-                    className:
-                      "clay-card p-10 hover:translate-y-[-10px] transition-all group",
-                  },
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "clay-icon w-16 h-16 flex items-center justify-center bg-blue-50 mb-8 group-hover:rotate-12 transition-transform",
-                    },
-                    c.icon
-                  ),
-                  React.createElement(
-                    "p",
-                    {
-                      className:
-                        "text-gray-700 font-bold text-xl leading-relaxed mb-8",
-                    },
-                    c.text
-                  ),
-                  React.createElement(
-                    "div",
-                    { className: "pt-6 border-t border-gray-100" },
-                    React.createElement(
-                      "span",
-                      {
-                        className:
-                          "text-brand-blue font-black text-lg tracking-tight",
-                      },
-                      "→ ",
-                      c.result
-                    )
-                  )
-                )
-              )
-            )
-          )
-        );
-      };
-
-      /**
-       * Trust
-       */
-      const TrustSection = () =>
-        React.createElement(
-          "section",
-          { id: "trust", className: "px-6 py-24 md:py-32 bg-gray-50" },
-          React.createElement(
-            "div",
-            {
-              className:
-                "max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-16 items-center",
-            },
-            React.createElement(
-              "div",
-              null,
-              React.createElement(ShieldCheck, {
-                className: "w-24 h-24 text-brand-blue mb-8",
-              }),
-              React.createElement(
-                "h3",
-                {
-                  className:
-                    "text-3xl md:text-5xl font-black mb-8 leading-tight",
-                },
-                "투명한 운영 정책으로",
-                React.createElement("br"),
-                "신뢰를 더합니다"
-              ),
-              React.createElement(
-                "p",
-                {
-                  className:
-                    "text-gray-500 text-xl font-bold leading-relaxed mb-10",
-                },
-                "스승님은 골퍼가 선택택 실패 리스크를",
-                React.createElement("br"),
-                "혼자 감당하지 않도록 시스템으로 보호합니다."
-              ),
-              React.createElement(
-                "div",
-                { className: "clay-card p-8 border-4 border-brand-blue/5 bg-white" },
-                React.createElement(
-                  "p",
-                  { className: "font-bold text-xl leading-relaxed text-gray-800" },
-                  "“결제 및 환불 구조를 ",
-                  React.createElement(
-                    "span",
-                    {
-                      className:
-                        "text-brand-blue font-black underline decoration-blue-200",
-                    },
-                    "법무법인 로투스"
-                  ),
-                  "와 파트너 관계로 법률 기준에 맞게 엄격하게 관리합니다.”"
-                )
-              )
-            ),
-            React.createElement(
-              "div",
-              { className: "space-y-6" },
-              [
-                {
-                  title: "상담 선진행",
-                  desc: "충분한 협의 전에는 어떠한 결제도 발생하지 않습니다.",
-                },
-                {
-                  title: "다회회 결제 강요 금지",
-                  desc: "1회, 3회 등 필요한 횟수만큼만 자유롭게 결제 가능합니다.",
-                },
-                {
-                  title: "운영팀 직접 조율",
-                  desc: "불편함이 생기면 운영팀이 중간에서 신속하게 해결해 드립니다.",
-                },
-              ].map((v, i) =>
-                React.createElement(
-                  "div",
-                  { key: i, className: "flex gap-6 items-start" },
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "w-10 h-10 rounded-2xl bg-brand-blue flex items-center justify-center text-white shrink-0 mt-1",
-                    },
-                    React.createElement(CheckCircle2, { size: 24 })
-                  ),
-                  React.createElement(
-                    "div",
-                    null,
-                    React.createElement(
-                      "h5",
-                      { className: "text-xl font-black mb-2" },
-                      v.title
-                    ),
-                    React.createElement(
-                      "p",
-                      { className: "text-gray-500 font-bold" },
-                      v.desc
-                    )
-                  )
-                )
-              )
-            )
-          )
-        );
-
-      /**
-       * CTA
-       */
-      const CTASection = () =>
-        React.createElement(
-          "section",
-          { className: "px-6 py-24 md:py-40 bg-white text-center" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-md mx-auto" },
-            React.createElement(
-              "h2",
-              { className: "text-4xl md:text-6xl font-black mb-8 leading-tight" },
-              "지금 바로",
-              React.createElement("br"),
-              "나만의 맞춤 스승님을 찾으세요"
-            ),
-            React.createElement(
-              "p",
-              { className: "text-gray-400 text-xl font-bold mb-12 md:mb-16" },
-              "원하는 레슨 요건을 알려주시면",
-              React.createElement("br"),
-              "가장 적합한 전문가를을 무료로 매칭해 드립니다."
-            ),
-            React.createElement(
-              "div",
-              { className: "flex flex-col md:flex-row items-center justify-center gap-6" },
-              React.createElement(
-                "a",
-                {
-                  href: KAKAO_CHAT_URL,
-                  className:
-                    "w-full md:w-auto min-w-[320px] clay-card bg-brand-blue py-7 md:py-8 px-10 text-white font-black text-2xl hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-3",
-                },
-                React.createElement(MessageCircle, { size: 32, fill: "currentColor" }),
-                "무료 매칭 요청청하기"
-              )
-            )
-          )
-        );
-
-      /**
-       * Footer
-       */
-      const FooterSection = () =>
-        React.createElement(
-          "footer",
-          { className: "px-6 py-20 md:py-28 bg-gray-900 text-white" },
-          React.createElement(
-            "div",
-            { className: "max-w-screen-xl mx-auto" },
-            React.createElement(
-              "div",
-              { className: "grid md:grid-cols-2 gap-12 md:gap-16 mb-14 md:mb-20" },
-              React.createElement(
-                "div",
-                null,
-                React.createElement(
-                  "div",
-                  { className: "flex items-center gap-3 mb-7 md:mb-8" },
-                  React.createElement(
-                    "div",
-                    {
-                      className:
-                        "w-12 h-12 bg-brand-blue rounded-xl flex items-center justify-center text-white font-black italic text-xl",
-                    },
-                    "S"
-                  ),
-                  React.createElement(
-                    "span",
-                    { className: "text-3xl font-black tracking-tighter" },
-                    "스승님"
-                  )
-                ),
-                React.createElement(
-                  "p",
-                  { className: "text-gray-400 font-bold text-xl leading-relaxed mb-2" },
-                  "골퍼와 프로가 만나는 가장 완벽한 방식.",
-                  React.createElement("br"),
-                  "완벽한 맞춤춤 레슨 경험을 선사합니다."
-                )
-              ),
-              React.createElement(
-                "div",
-                { className: "grid grid-cols-2 gap-8 text-gray-400" },
-                React.createElement(
-                  "div",
-                  null,
-                  React.createElement(
-                    "h6",
-                    { className: "text-white font-black mb-6" },
-                    "서비스"
-                  ),
-                  React.createElement(
-                    "ul",
-                    { className: "space-y-4 font-bold" },
-                    React.createElement("li", null, "매칭 신청"),
-                    React.createElement("li", null, "이용 약관"),
-                    React.createElement("li", null, "개인정보처리방침")
-                  )
-                ),
-                React.createElement(
-                  "div",
-                  null,
-                  React.createElement(
-                    "h6",
-                    { className: "text-white font-black mb-6" },
-                    "문의"
-                  ),
-                  React.createElement(
-                    "ul",
-                    { className: "space-y-4 font-bold" },
-                    React.createElement("li", null, "카카오채널"),
-                    React.createElement("li", null, "파트너십")
-                  )
-                )
-              )
-            ),
-            React.createElement(
-              "div",
-              { className: "pt-10 border-t border-gray-800 space-y-3 text-sm font-bold text-gray-500" },
-              React.createElement(
-                "div",
-                { className: "flex flex-wrap gap-x-12 gap-y-3" },
-                React.createElement(
-                  "div",
-                  { className: "flex gap-4" },
-                  React.createElement("span", null, "상호명"),
-                  React.createElement(
-                    "span",
-                    { className: "text-gray-400 font-black" },
-                    "스승님 (Suseungnim)"
-                  )
-                ),
-                React.createElement(
-                  "div",
-                  { className: "flex gap-4" },
-                  React.createElement("span", null, "법률 파트너"),
-                  React.createElement(
-                    "span",
-                    { className: "text-gray-400 font-black" },
-                    "법무법인 로투스"
-                  )
-                )
-              ),
-              React.createElement("p", null, "© 2026 Suseungnim Corp. All rights reserved.")
-            )
-          )
-        );
-
-      /**
-       * App
-       */
-      const App = () =>
-        React.createElement(
+    function LoadingScreen({ progress }) {
+      return h(
+        "div",
+        { className: "fixed inset-0 z-50 flex flex-col items-center justify-center bg-white p-6 text-center" },
+        h(
           "div",
-          { className: "min-h-screen bg-white selection:bg-brand-blue/10" },
-          React.createElement(Header, null),
-          React.createElement(HeroSection, null),
-          React.createElement(EmpathySection, null),
-          React.createElement(ChecklistSection, null),
-          React.createElement(DifferenceSection, null),
-          React.createElement(SummarySection, null),
-          React.createElement(ComparisonSection, null),
-          React.createElement(CaseStudySection, null),
-          React.createElement(TrustSection, null),
-          React.createElement(CTASection, null),
-          React.createElement(FooterSection, null),
+          { className: "w-24 h-24 mb-6 relative" },
+          h("div", { className: "absolute inset-0 border-4 border-blue-50 rounded-full" }),
+          h("div", { className: "absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin" }),
+          h("div", { className: "absolute inset-0 flex items-center justify-center" }, h("span", { className: "text-3xl animate-bounce" }, "🏌️‍♀️"))
+        ),
+        h("h2", { className: "text-xl font-black text-gray-900 mb-2 break-keep" }, "SEUSEUNGNIM X 서수연 프로", h("br"), "클래스 자료를 준비 중입니다"),
+        h("p", { className: "text-gray-500 mb-8 text-sm leading-relaxed break-keep" }, "잠시만 기다려주시면 밝고 시원한 골프 시즌의", h("br"), "생생한 이미지가 생성됩니다."),
+        h(
+          "div",
+          { className: "w-full max-w-xs bg-blue-50 h-3 rounded-full overflow-hidden border border-blue-100" },
+          h("div", {
+            className: "h-full bg-blue-500 transition-all duration-700 ease-out",
+            style: { width: `${Math.round(progress)}%` }
+          })
+        ),
+        h("p", { className: "mt-3 text-blue-600 font-black text-lg" }, `${Math.round(progress)}%`)
+      );
+    }
 
-          // Mobile bottom CTA bar
-          React.createElement(
+    function CardPage({ data, imageUrl, disableImages }) {
+      // 텍스트 가독성을 위한 매우 약한 오버레이
+      return h(
+        "div",
+        { className: "relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col border border-gray-100" },
+
+        // Background
+        h(
+          "div",
+          { className: "absolute inset-0 w-full h-full" },
+          !disableImages && imageUrl
+            ? h("img", { src: imageUrl, alt: "bg", className: "w-full h-full object-cover animate-in fade-in duration-700" })
+            : h("div", { className: "w-full h-full bg-gradient-to-b from-white to-blue-50" }),
+          h("div", { className: "absolute inset-0 bg-gradient-to-b from-white/70 via-white/10 to-white/40" })
+        ),
+
+        // Content
+        h(
+          "div",
+          { className: "relative z-10 p-8 md:p-10 h-full flex flex-col justify-between" },
+
+          // Header
+          h(
             "div",
-            {
-              className:
-                "md:hidden fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/90 to-transparent z-40 pointer-events-none",
-            },
-            React.createElement(
-              "a",
+            { className: "space-y-3" },
+            data.subtitle
+              ? h(
+                  "span",
+                  { className: "inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" },
+                  data.subtitle
+                )
+              : null,
+            h(
+              "div",
+              { className: "leading-[1.2] tracking-tight break-keep" },
+              data.titleLines
+                ? h(
+                    "h1",
+                    { className: "text-[1.45rem] md:text-3xl font-black text-gray-900" },
+                    renderLines(data.titleLines)
+                  )
+                : null,
+              data.highlightText
+                ? h(
+                    "div",
+                    { className: "mt-2" },
+                    h(
+                      "span",
+                      { className: `text-[1.7rem] md:text-4xl ${data.highlightClass || ""}` },
+                      data.highlightText
+                    )
+                  )
+                : null,
+              data.emphasizeText
+                ? h(
+                    "div",
+                    { className: "mt-2" },
+                    h(
+                      "span",
+                      { className: `text-[1.55rem] md:text-3xl font-black ${data.emphasizeClass || ""}` },
+                      data.emphasizeText
+                    )
+                  )
+                : null
+            ),
+            data.descriptionLines
+              ? h(
+                  "p",
+                  { className: "text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/50 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" },
+                  renderLines(data.descriptionLines)
+                )
+              : null
+          ),
+
+          // Main content
+          h(
+            "div",
+            { className: "flex-1 flex flex-col justify-center py-4" },
+            Array.isArray(data.points) && data.points.length
+              ? h(
+                  "ul",
+                  { className: "space-y-3" },
+                  ...data.points.map((pt, i) =>
+                    h(
+                      "li",
+                      {
+                        key: i,
+                        className:
+                          "bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start"
+                      },
+                      h(
+                        "span",
+                        { className: "mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" },
+                        "✓"
+                      ),
+                      h("span", { className: "leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
+                    )
+                  )
+                )
+              : null
+          ),
+
+          // Footer branding
+          h(
+            "div",
+            { className: "flex justify-center" },
+            h(
+              "div",
               {
-                href: KAKAO_CHAT_URL,
                 className:
-                  "pointer-events-auto block w-full bg-brand-blue py-5 rounded-2xl text-white font-black text-center shadow-2xl transform active:scale-95 transition-transform flex items-center justify-center gap-2 text-lg",
+                  "text-[9px] text-gray-400 font-black bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase"
               },
-              React.createElement(MessageCircle, { size: 24, fill: "currentColor" }),
-              "매칭 요청하기"
+              "SEUSEUNGNIM X SEO SU YEON"
             )
           )
-        );
+        )
+      );
+    }
 
-      // Mount
-      const rootElement = document.getElementById("root");
-      if (!rootElement) throw new Error("Could not find root element to mount to");
-      const root = createRoot(rootElement);
-      root.render(React.createElement(React.StrictMode, null, React.createElement(App, null)));
-    </script>
-  </body>
+    /**
+     * =========================
+     * 4) App
+     * =========================
+     */
+    function App() {
+      const [apiKey, setApiKey] = useState(() => localStorage.getItem("GEMINI_API_KEY") || "");
+      const [disableImages, setDisableImages] = useState(false);
+
+      const [state, setState] = useState({
+        isGenerating: false,
+        images: {},
+        progress: 0
+      });
+
+      const handleApply = useCallback(() => {
+        window.open("http://pf.kakao.com/_kxawRn/chat", "_blank");
+      }, []);
+
+      const initImages = useCallback(async () => {
+        // 이미지 꺼짐이면 굳이 생성 안 함
+        if (disableImages) {
+          setState({ isGenerating: false, images: {}, progress: 100 });
+          return;
+        }
+
+        // 키 없으면 생성 안 함 (Fallback은 그라데이션 배경)
+        if (!apiKey) {
+          setState({ isGenerating: false, images: {}, progress: 100 });
+          return;
+        }
+
+        setState({ isGenerating: true, images: {}, progress: 0 });
+
+        const newImages = {};
+        let count = 0;
+
+        for (const page of CARD_PAGES) {
+          if (count > 0) await new Promise((r) => setTimeout(r, 250));
+
+          const url = await generateCardImage(apiKey, page.backgroundImagePrompt);
+          if (url) newImages[page.id] = url;
+
+          count++;
+          setState({
+            isGenerating: true,
+            images: { ...newImages },
+            progress: (count / CARD_PAGES.length) * 100
+          });
+        }
+
+        setState((prev) => ({ ...prev, isGenerating: false, progress: 100 }));
+      }, [apiKey, disableImages]);
+
+      useEffect(() => {
+        initImages();
+      }, [initImages]);
+
+      const saveKey = useCallback(() => {
+        localStorage.setItem("GEMINI_API_KEY", apiKey.trim());
+        initImages();
+      }, [apiKey, initImages]);
+
+      const clearKey = useCallback(() => {
+        localStorage.removeItem("GEMINI_API_KEY");
+        setApiKey("");
+        initImages();
+      }, [initImages]);
+
+      // 최초 1장도 없고 생성중이면 로딩
+      if (state.isGenerating && !state.images[CARD_PAGES[0].id] && !disableImages && apiKey) {
+        return h(LoadingScreen, { progress: state.progress || 0 });
+      }
+
+      return h(
+        "div",
+        { className: "min-h-screen bg-slate-50 flex flex-col items-center pb-24" },
+        h(
+          "div",
+          { className: "w-full max-w-md mx-auto flex flex-col gap-4 p-4" },
+
+          // Admin/Controls
+          h(
+            "div",
+            { className: "bg-white rounded-[1.75rem] p-5 shadow-sm border border-gray-100 space-y-3" },
+            h("div", { className: "flex items-center justify-between" },
+              h("div", { className: "flex flex-col" },
+                h("span", { className: "text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Generator"),
+                h("span", { className: "text-base font-black text-gray-900" }, "Gemini 이미지 생성 설정")
+              ),
+              h("div", { className: "w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" },
+                h("span", { className: "text-xl" }, "🧩")
+              )
+            ),
+
+            h("div", { className: "space-y-2" },
+              h("label", { className: "text-[11px] font-black text-gray-500 tracking-wider uppercase" }, "Gemini API Key (선택)"),
+              h("input", {
+                value: apiKey,
+                onChange: (e) => setApiKey(e.target.value),
+                placeholder: "여기에 API Key 입력 (없으면 배경은 그라데이션으로 표시)",
+                className: "w-full px-4 py-3 rounded-2xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200 font-bold text-sm"
+              }),
+              h("div", { className: "flex gap-2" },
+                h("button", {
+                  onClick: saveKey,
+                  className: "flex-1 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 transition"
+                }, "키 저장 & 재생성"),
+                h("button", {
+                  onClick: clearKey,
+                  className: "py-3 px-4 rounded-2xl bg-gray-100 text-gray-700 font-black text-sm hover:bg-gray-200 transition"
+                }, "키 삭제")
+              )
+            ),
+
+            h("div", { className: "flex items-center justify-between pt-1" },
+              h("div", { className: "text-xs font-bold text-gray-500" }, "배경 이미지 생성 끄기 (용량/쿼터 절약)"),
+              h("button", {
+                onClick: () => setDisableImages((v) => !v),
+                className: `px-4 py-2 rounded-full font-black text-xs border transition ${
+                  disableImages ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200"
+                }`
+              }, disableImages ? "ON" : "OFF")
+            ),
+
+            state.isGenerating
+              ? h("div", { className: "text-xs font-black text-blue-600" }, `이미지 생성 중... ${Math.round(state.progress)}%`)
+              : null
+          ),
+
+          // Banner Card Header
+          h(
+            "div",
+            { className: "bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex items-center justify-between" },
+            h(
+              "div",
+              { className: "flex flex-col" },
+              h("span", { className: "text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Premium Lesson"),
+              h("span", { className: "text-lg font-black text-gray-900" }, "서수연 프로의 숏게임")
+            ),
+            h("div", { className: "w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" }, h("span", { className: "text-xl" }, "🏌️‍♀️"))
+          ),
+
+          // Panels
+          ...CARD_PAGES.map((page, idx) =>
+            h(
+              "div",
+              {
+                key: page.id,
+                className: "animate-in fade-in slide-in-from-bottom-10 duration-700",
+                style: { animationDelay: `${idx * 120}ms` }
+              },
+              h(CardPage, {
+                data: page,
+                imageUrl: state.images[page.id],
+                disableImages
+              })
+            )
+          ),
+
+          // Bottom Contact Button (End of Scroll)
+          h(
+            "div",
+            { className: "py-8" },
+            h(
+              "button",
+              {
+                onClick: handleApply,
+                className:
+                  "w-full py-6 bg-[#FEE500] text-[#3c1e1e] font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 hover:bg-[#FDD800] active:scale-[0.97] transition-all"
+              },
+              h("img", {
+                src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+                className: "w-8 h-8",
+                alt: "kakao"
+              }),
+              "숏게임 클래스 신청하기"
+            ),
+            h("p", { className: "mt-4 text-center text-gray-400 text-xs font-medium" }, "© 2026 SEUSEUNGNIM X PRO SEO SU YEON")
+          )
+        ),
+
+        // Fixed Floating CTA
+        h(
+          "div",
+          { className: "fixed bottom-0 left-0 right-0 p-5 max-w-md mx-auto z-30" },
+          h(
+            "button",
+            {
+              onClick: handleApply,
+              className:
+                "w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-lg rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-4 border-white animate-bounce",
+              style: { animationDuration: "4s" }
+            },
+            h("img", {
+              src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+              className: "w-6 h-6",
+              alt: "kakao"
+            }),
+            "지금 바로 문의하기"
+          )
+        )
+      );
+    }
+
+    /**
+     * =========================
+     * 5) Mount
+     * =========================
+     */
+    const rootEl = document.getElementById("root");
+    if (!rootEl) throw new Error("Root element not found");
+    createRoot(rootEl).render(h(React.StrictMode, null, h(App)));
+  </script>
+</body>
 </html>
