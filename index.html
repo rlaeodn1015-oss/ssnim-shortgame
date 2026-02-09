@@ -207,9 +207,27 @@
           { className: "absolute inset-0 w-full h-full" },
           !disableImages && imageUrl
             ? h("img", { src: imageUrl, alt: "bg", className: "w-full h-full object-cover animate-in fade-in duration-700" })
-            : h("div", { className: "w-full h-full bg-gradient-to-b from-white to-blue-50" }),
-          h("div", { className: "absolute inset-0 bg-gradient-to-b from-white/70 via-white/10 to-white/40" })
-        ),
+            : h("div", { className: "w-full h-full bg-gradient-to-b from-white to-blue-50 relative" },
+    // subtle pattern layer
+    h("div", { className: "absolute inset-0 opacity-[0.18]" },
+      h("div", { className: "w-full h-full",
+        style: {
+          backgroundImage: `
+            radial-gradient(circle at 20% 20%, rgba(37, 99, 235, .25) 0 2px, transparent 3px),
+            radial-gradient(circle at 70% 35%, rgba(37, 99, 235, .22) 0 2px, transparent 3px),
+            radial-gradient(circle at 40% 75%, rgba(37, 99, 235, .18) 0 2px, transparent 3px)
+          `,
+          backgroundSize: "80px 80px",
+          backgroundPosition: "0 0, 20px 10px, 10px 30px"
+        }
+      })
+    ),
+    // small golf icons floating
+    h("div", { className: "absolute inset-0 flex items-center justify-center" },
+      h("div", { className: "flex gap-4 text-3xl" }, "⛳️", "🏌️‍♀️", "🏌️", "🏌️‍♂️")
+    )
+  )
+
 
         // Content
         h(
@@ -481,4 +499,5 @@
   </script>
 </body>
 </html>
+
 
