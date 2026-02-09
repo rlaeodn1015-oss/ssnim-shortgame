@@ -1,610 +1,320 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0B5CFF" />
   <title>스승님 X 서수연 프로 숏게임 클래스</title>
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Pretendard -->
   <link rel="stylesheet" as="style" crossorigin
-        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 
   <style>
-    body{
-      font-family:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
-        "Helvetica Neue","Segoe UI","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-      background:#f8fafc; overflow-x:hidden;
+    :root { --brand-blue: #0B5CFF; }
+    body {
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+        "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      background-color: #f8fafc;
+      overflow-x: hidden;
     }
-    .aspect-4-5{ aspect-ratio:4/5; }
-    .tap{ -webkit-tap-highlight-color: transparent; }
+    .aspect-4-5 { aspect-ratio: 4 / 5; }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .floating { animation: float 3s ease-in-out infinite; }
+
+    /* small helper for safe-area */
+    .safe-bottom { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+    .fixed-cta-wrap { bottom: calc(3rem + env(safe-area-inset-bottom)); }
   </style>
 
+  <!-- ESM imports -->
   <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@19.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
-        "@google/genai": "https://esm.sh/@google/genai@1.40.0"
-      }
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+      "@google/genai": "https://esm.sh/@google/genai@1.40.0"
     }
+  }
   </script>
 </head>
+
 <body>
   <div id="root"></div>
 
   <script type="module">
-    import React, { useCallback, useEffect, useMemo, useState } from "react";
+    import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
     import { createRoot } from "react-dom/client";
     import { GoogleGenAI } from "@google/genai";
-    const h = React.createElement;
 
-    const CTA_URL = "http://pf.kakao.com/_kxawRn/chat";
+    /***********************
+     * Utilities
+     ***********************/
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    const GLOBAL_PROMPT_PREFIX = `
-[CORE OUTPUT]
-- 4:5 vertical card scene image for mobile.
-- Keep SAFE AREA padding 8% on all sides. No cropping.
-- Include bottom navigation UI visually “◀ n/8 ▶” inside the card bottom (visual only).
-- Include a CTA button shape at the bottom center (visual only).
-- Korean text only. Pretendard-like modern sans-serif. Not oversized. Natural line breaks.
-- No real photos. No app mockups. No screenshots.
-- Golf-only environment: green / putting / bunker / approach / outdoor course. No office. No plain single color.
+    function getStoredApiKey() {
+      return localStorage.getItem("SSNIM_GEMINI_API_KEY") || "";
+    }
 
-[CHARACTER STYLE — MUST]
-- Realistic 3D humans ONLY. High-end commercial advertising look (Midjourney realistic 3D ad style).
-- Natural body proportions, natural faces, photorealistic skin texture.
-- NOT cute. NOT chibi. NOT Pixar. NOT Disney. NOT anime.
+    function setStoredApiKey(k) {
+      localStorage.setItem("SSNIM_GEMINI_API_KEY", (k || "").trim());
+    }
 
-[COACH — MUST]
-- Beautiful Korean female golf professional (서수연 프로 느낌), slim athletic, modern golf cap,
-  fitted golf top, golf skirt or slacks, confident coaching posture, slight smile, professional vibe.
-- Coach role must be obvious, often centered.
+    async function generateCardImage(prompt, apiKey, maxRetries = 3) {
+      if (!apiKey) return null;
 
-[STUDENTS]
-- Mixed male/female amateurs, everyday golf wear, slightly awkward posture,
-  relatable expressions (frustrated / focused / surprised).
+      let attempt = 0;
+      while (attempt <= maxRetries) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
 
-[SCENE DIRECTION — MUST]
-- Each page is a specific SCENE showing emotion + action + flow (not generic golf background).
-- Use cinematic depth of field, sunlight, soft lens flare when relevant.
-- Composition: foreground characters + midground action + background scenery.
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-image",
+            contents: { parts: [{ text: prompt }] },
+            config: {
+              imageConfig: { aspectRatio: "4:5" }
+            }
+          });
 
-[SPECIAL PAGES]
-- Benefit page: coupon / percent / ticket / coin-style BENEFIT icons (graphic icons only; no cash).
-- Apply page: blurred chat-style background with 2–3 Korean bubbles (generic style; not a screenshot).
-- Do NOT merge discounts. Keep: “레슨 15% 할인 + 2인 동반 시 연습장비 50% 지원(최대 2만원/조건별)”.
-    `.trim();
+          const parts = response?.candidates?.[0]?.content?.parts || [];
+          for (const part of parts) {
+            if (part?.inlineData?.data) {
+              return `data:image/png;base64,${part.inlineData.data}`;
+            }
+          }
+          return null;
+        } catch (error) {
+          attempt++;
+          const errStr = JSON.stringify(error || {});
+          const isRateLimit =
+            (error?.message && String(error.message).includes("429")) ||
+            error?.status === 429 ||
+            errStr.includes("429");
 
-    const PAGES = [
+          if (isRateLimit && attempt <= maxRetries) {
+            const backoffTime = Math.pow(2, attempt) * 1000; // 2s,4s,8s
+            console.warn(`Rate limit(429). Retry in ${backoffTime}ms... (${attempt}/${maxRetries})`);
+            await sleep(backoffTime);
+            continue;
+          }
+          console.error("Image generation failed:", error);
+          break;
+        }
+      }
+      return null;
+    }
+
+    /***********************
+     * Data (from your constants)
+     * NOTE: You provided 8 pages. If you want 9, tell me and I'll add.
+     ***********************/
+    const CARD_PAGES = [
       {
         id: 1,
+        title: (
+          React.createElement(React.Fragment, null,
+            "숏게임만 잡아도", React.createElement("br"),
+            React.createElement("span", { className: "text-blue-600 font-extrabold text-4xl" }, "10타는 줄일 수 있습니다")
+          )
+        ),
         subtitle: "2026 시즌 대비",
-        titleLines: ["숏게임만 잡아도"],
-        highlightText: "10타는 줄일 수 있습니다",
-        highlightClass: "text-blue-600",
-        descriptionLines: ["스승님 X 서수연 프로"],
-        prompt: `
-[PAGE 1 — 시즌 시작(후킹)]
-Scene: “아… 시즌 시작이구나”
-Background: wide outdoor golf course panorama, bright blue sky, wide green, warm sunlight,
-a small distant golf cart, gentle lens flare, fresh season opening vibe.
-Action/Emotion: coach leads the moment confidently, students feel motivated/excited.
-Foreground: coach centered, 1–2 amateurs nearby reacting positively.
-Add subtle card frame feeling + safe area.
-Add bottom nav “◀ 1/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        description: "스승님 X 서수연 프로",
+        backgroundImagePrompt:
+          "A high-quality 3D startup-style illustration of a bright sunny golf course with a clear blue sky. A cute female Korean golf pro character in stylish white and sky blue golf wear (cap and skirt) is standing confidently next to a smiling student golfer who just made a successful putt. A modern golf cart is visible in the background. 4:5 aspect ratio, vibrant colors, 3D render."
       },
       {
         id: 2,
-        subtitle: "숏게임 하나로 5타 이상 감량",
-        titleLines: ["드라이버 잘 쳐놓고", "그린 주변에서 까먹는 스코어.."],
-        emphasizeText: "너무 열받지 않으세요?",
-        emphasizeClass: "text-red-500",
-        descriptionLines: ["연습장에서는 프로,", "필드에서는 백돌이."],
-        prompt: `
-[PAGE 2 — 분노 + 아쉬움(문제 공감)]
-Scene: “아 씨… 또 여기서 무너졌네”
-Background: around the green, ball stopped very close to the hole (painful near-miss),
-fringe/green detail, soft sunlight, shallow depth of field.
-Include a blurred scoreboard in the back suggesting double bogey (abstract/blur; not readable UI).
-Action/Emotion: amateur holding putter, scratching head, frustrated; coach empathizes and explains.
-Add bottom nav “◀ 2/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        title: (
+          React.createElement(React.Fragment, null,
+            "드라이버 잘 쳐놓고", React.createElement("br"),
+            "그린 주변에서 까먹는 스코어..", React.createElement("br"),
+            React.createElement("span", { className: "text-red-500" }, "너무 열받지 않으세요?")
+          )
+        ),
+        subtitle: "숏게임 하나로 5타 이상 줄이기",
+        description: "연습장에서는 프로,\n필드에서는 백돌이.",
+        backgroundImagePrompt:
+          "3D startup style illustration. A male amateur golfer character looking frustrated and holding his head, looking at a golf ball that stopped exactly 1 inch next to the hole cup on a lush green. A friendly female pro character is standing beside him, pointing at the ball and explaining something. Detailed bunker and green background. 4:5 aspect ratio."
       },
       {
         id: 3,
-        subtitle: "어프로치 · 벙커 · 퍼팅",
-        titleLines: ["서수연 프로", "숏게임 클래스"],
-        descriptionLines: ["실전만 집중하는 2시간"],
-        prompt: `
-[PAGE 3 — 프로 등장(솔루션)]
-Scene: “아 여기서 배우는구나”
-Background: short game practice zone with target mat, approach distance markers, small cones/flag,
-coach has subtle rim light/hero light behind her.
-Action/Emotion: coach demonstrates wedge/chip technique; amateur watches focused with “aha”.
-Add bottom nav “◀ 3/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        title: (
+          React.createElement(React.Fragment, null,
+            "서수연 프로", React.createElement("br"),
+            "숏게임 클래스"
+          )
+        ),
+        subtitle: "솔루션 제안",
+        description: "어프로치 · 벙커 · 퍼팅\n실전만 집중하는 2시간",
+        backgroundImagePrompt:
+          "3D startup style illustration of a professional short game practice zone on a high-end golf course. A female Korean pro golfer is showing the correct swing posture for a wedge shot to a group of cute amateur characters. The sky is bright blue. 4:5 aspect ratio."
       },
       {
         id: 4,
-        titleLines: ["클래스 핵심 포인트"],
+        title: "레슨 특징",
         points: ["✔ 이론 최소", "✔ 실전 집중", "✔ 소수정예 단독", "✔ 날짜 직접 선택"],
-        prompt: `
-[PAGE 4 — 체계적인 코칭(특징)]
-Scene: “아 그냥 치는게 아니네”
-Background: practice green + a small portable whiteboard,
-trajectory arrow graphics on the board, subtle ball flight overlay line.
-Action/Emotion: coach points at board; amateur nods, understanding.
-Add bottom nav “◀ 4/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        backgroundImagePrompt:
+          "3D startup style illustration of a professional golf coach area. A whiteboard stands on the green with golf swing trajectory arrows drawn on it. A female pro character is pointing at the board with a golf club. Soft sunlight, blue sky. 4:5 aspect ratio."
       },
       {
         id: 5,
-        titleLines: ["혜택 폭발"],
-        points: [
-          "숏게임 레슨 15% 할인",
-          "+ 2인 동반 시 연습장비 50% 지원",
-          "(연습장비 최대 2만원 / 조건별 적용)"
+        title: "특별 혜택",
+        benefits: [
+          { label: "숏게임 레슨", value: "15% 할인" },
+          { label: "2인 동반 시", value: "연습장비\n50% 지원", sub: "(연습장비 최대 2만원 / 조건별 적용)" }
         ],
-        prompt: `
-[PAGE 5 — 혜택 폭발(핵심)]
-Scene: “오 혜택 괜찮은데?”
-Background: benefit icons raining lightly: coupon tickets, % icons, voucher tags,
-coin/point-style graphic icons (NOT cash, NOT real money visuals).
-Add a very blurred practice range entrance gate/check-in gate in the far background.
-Action/Emotion: students surprised/happy; coach confident smile.
-IMPORTANT: do NOT merge discounts into one percent.
-Add bottom nav “◀ 5/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        backgroundImagePrompt:
+          "3D startup style illustration of a golf practice range entrance, slightly blurred. In the foreground, floating glossy 3D icons of coupons, percentage symbols (%), and shiny gold coins with golf ball textures. Vibrant sky blue and gold theme. 4:5 aspect ratio."
       },
       {
         id: 6,
-        titleLines: ["이런 분께 추천합니다"],
+        title: "이런 분께 추천합니다",
         points: [
-          "• 시즌 첫 라운딩 준비",
+          "• 시즌 첫 라운딩 준비 중",
           "• 숏게임 때문에 점수 안 줄어드는 분",
           "• 연습장과 필드 차이 느끼는 분",
           "• 친구와 같이 배우고 싶은 분"
         ],
-        prompt: `
-[PAGE 6 — 내 얘기네(추천 대상)]
-Scene: “어 나잖아”
-Background: practice green with multiple amateurs (3–4) male/female, different expressions.
-Speech bubbles keywords in Korean: “시즌 준비”, “숏게임…”, “백돌이 탈출”.
-Action/Emotion: each amateur reflects their situation; coach behind/center as confident helper.
-Add bottom nav “◀ 6/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        backgroundImagePrompt:
+          "3D startup style illustration of four different amateur golfer characters (male and female) standing together on a putting green, looking excited. Speech bubbles above them with icons. Female pro character stands in the center smiling. 4:5 aspect ratio."
       },
       {
         id: 7,
-        titleLines: ["신청 방법"],
-        descriptionLines: [
-          "하단 [신청하기] 클릭 →",
-          "카카오톡 채널 채팅 연결",
-          "",
-          "원하시는 날짜 말씀 주시면",
-          "레슨 일정 바로 잡아드립니다."
-        ],
-        prompt: `
-[PAGE 7 — 지금 행동(전환)]
-Scene: “아 이렇게 신청하는구나”
-Background: blurred chat-style UI background (generic style; NOT a screenshot; NOT an app mockup),
-include 2–3 Korean chat bubbles:
-“숏게임 클래스 문의드려요”
-“날짜 언제 가능할까요?”
-(optional) “2인도 가능할까요?”
-Foreground: a realistic 3D hand tapping a smartphone screen (action).
-Coach subtly present as helpful presence.
-Add bottom nav “◀ 7/8 ▶” and CTA button shape inside card.
-        `.trim(),
+        title: "신청 방법",
+        description:
+          "하단 [신청하기] 버튼 클릭 →\n카카오톡 채널 채팅으로 바로 연결\n\n원하시는 날짜 말씀 주시면\n레슨 일정 바로 잡아드립니다.",
+        backgroundImagePrompt:
+          "3D startup style illustration of a blurred KakaoTalk chat screen background. A cute amateur character is smiling and touching a smartphone screen with their finger. Clear golf course environment background behind the phone. 4:5 aspect ratio."
       },
       {
         id: 8,
-        subtitle: "숏게임이 바뀌면 골프가 달라집니다.",
-        titleLines: ["지금 바로 신청하세요"],
+        title: (
+          React.createElement(React.Fragment, null,
+            "지금 바로", React.createElement("br"),
+            "신청하세요"
+          )
+        ),
+        subtitle: "3차 앵콜 특별 레슨 (2월 한정)",
+        description: "🔥 레슨 스케줄 마감임박!\n\n숏게임이 바뀌면\n여러분의 골프가 달라집니다.",
         hasCta: true,
-        prompt: `
-[PAGE 8 — 결과 상상(CTA)]
-Scene: “나도 저렇게 되고 싶다”
-Background: ball dropping into the hole at the exact moment, dynamic motion,
-sunlight + lens flare, panoramic course vibe, depth of field.
-Action/Emotion: amateurs cheering, joyful body language; coach proud smile.
-Include button text area for “숏게임 클래스 신청하기” and CTA button shape.
-Add bottom nav “◀ 8/8 ▶” inside card.
-        `.trim(),
+        backgroundImagePrompt:
+          "3D startup style illustration of a close-up shot of a golf ball falling into a hole cup. Sunlight is sparkling on the green grass. A wide panoramic view of a beautiful golf course under a sunset-tinged blue sky. 4:5 aspect ratio."
       }
     ];
 
-    async function genImage(apiKey, pagePrompt) {
-      if (!apiKey) return null;
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash-image",
-          contents: { parts: [{ text: (GLOBAL_PROMPT_PREFIX + "\n\n" + pagePrompt).trim() }] },
-          config: { imageConfig: { aspectRatio: "4:5" } }
-        });
-        const parts = response?.candidates?.[0]?.content?.parts || [];
-        for (const p of parts) {
-          if (p.inlineData) return `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`;
-        }
-        return null;
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
+    /***********************
+     * UI Components
+     ***********************/
+    function LoadingScreen({ progress }) {
+      const remain = Math.max(0, Math.round((1 - progress / 100) * 30));
+      return (
+        React.createElement("div", { className: "fixed inset-0 z-50 flex flex-col items-center justify-center bg-white p-6 text-center" },
+          React.createElement("div", { className: "w-24 h-24 mb-6 relative" },
+            React.createElement("div", { className: "absolute inset-0 border-4 border-blue-100 rounded-full" }),
+            React.createElement("div", { className: "absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin" }),
+            React.createElement("div", { className: "absolute inset-0 flex items-center justify-center" },
+              React.createElement("span", { className: "text-2xl" }, "🏌️‍♀️")
+            )
+          ),
+          React.createElement("h2", { className: "text-xl font-bold text-gray-800 mb-2" },
+            "서수연 프로의 3D 카드뉴스를", React.createElement("br"), "생성하고 있습니다"
+          ),
+          React.createElement("p", { className: "text-gray-500 mb-8 text-sm" },
+            "잠시만 기다려주시면 멋진 이미지가 준비됩니다.", React.createElement("br"),
+            `(약 ${remain}초 남음)`
+          ),
+          React.createElement("div", { className: "w-full max-w-xs bg-gray-100 h-2 rounded-full overflow-hidden" },
+            React.createElement("div", {
+              className: "h-full bg-blue-500 transition-all duration-500 ease-out",
+              style: { width: `${progress}%` }
+            })
+          ),
+          React.createElement("p", { className: "mt-2 text-blue-600 font-medium" }, `${Math.round(progress)}%`)
+        )
+      );
     }
 
-    function svgData(svg) {
-      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-    }
-
-    function FallbackScene({ pageId }) {
-      // Page-specific richer fallback (always non-empty, scene-like)
-      const scenes = {
-        1: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#5ac8ff"/><stop offset="0.55" stop-color="#dff5ff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#bff3d6"/><stop offset="1" stop-color="#34d399"/>
-    </linearGradient>
-    <radialGradient id="sun" cx="75%" cy="18%" r="45%">
-      <stop offset="0" stop-color="#fff7c2" stop-opacity="0.95"/>
-      <stop offset="0.35" stop-color="#fff7c2" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#fff7c2" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.22"/>
-    </filter>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky)"/>
-  <circle cx="620" cy="180" r="220" fill="url(#sun)"/>
-  <path d="M0,620 C160,560 320,600 440,560 C560,520 680,540 800,510 L800,1000 L0,1000 Z" fill="url(#green)" opacity="0.98"/>
-  <path d="M0,705 C200,650 360,700 520,650 C650,610 740,640 800,625 L800,1000 L0,1000 Z" fill="#0ea5e9" opacity="0.08"/>
-  <!-- Distant cart -->
-  <g transform="translate(560 560) scale(0.8)" opacity="0.35" filter="url(#blur8)">
-    <rect x="0" y="30" width="140" height="40" rx="14" fill="#1f2937"/>
-    <rect x="25" y="0" width="90" height="35" rx="10" fill="#374151"/>
-    <circle cx="35" cy="80" r="14" fill="#111827"/>
-    <circle cx="110" cy="80" r="14" fill="#111827"/>
-  </g>
-  <!-- Lens flare -->
-  <g opacity="0.35">
-    <circle cx="610" cy="205" r="28" fill="#ffffff" opacity="0.25"/>
-    <circle cx="520" cy="255" r="16" fill="#ffffff" opacity="0.18"/>
-    <circle cx="455" cy="310" r="10" fill="#ffffff" opacity="0.12"/>
-  </g>
-  <!-- Card vignette -->
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        2: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky2" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#62d0ff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green2" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c6f7dd"/><stop offset="1" stop-color="#22c55e"/>
-    </linearGradient>
-    <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky2)"/>
-  <path d="M0,610 C180,550 360,610 520,560 C650,520 740,560 800,535 L800,1000 L0,1000 Z" fill="url(#green2)"/>
-  <!-- Hole area -->
-  <ellipse cx="455" cy="710" rx="170" ry="40" fill="#0f766e" opacity="0.12"/>
-  <circle cx="465" cy="700" r="18" fill="#111827" opacity="0.65"/>
-  <circle cx="465" cy="700" r="8" fill="#000000" opacity="0.65"/>
-  <!-- Near-miss ball -->
-  <circle cx="520" cy="688" r="16" fill="#ffffff"/>
-  <circle cx="520" cy="688" r="16" fill="none" stroke="#e5e7eb" stroke-width="3"/>
-  <!-- Blurred scoreboard -->
-  <g filter="url(#blur6)" opacity="0.38" transform="translate(85 165)">
-    <rect x="0" y="0" width="280" height="120" rx="18" fill="#111827"/>
-    <rect x="18" y="18" width="244" height="26" rx="10" fill="#374151"/>
-    <rect x="18" y="56" width="160" height="22" rx="9" fill="#ef4444" opacity="0.8"/>
-    <rect x="18" y="84" width="200" height="18" rx="9" fill="#9ca3af"/>
-  </g>
-  <!-- Vignette -->
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        3: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky3" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#53c7ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green3" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
-    </linearGradient>
-    <radialGradient id="spot" cx="55%" cy="42%" r="38%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.6"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky3)"/>
-  <path d="M0,640 C180,580 360,640 520,600 C660,565 760,590 800,575 L800,1000 L0,1000 Z" fill="url(#green3)"/>
-  <!-- Target mat -->
-  <g transform="translate(150 650)">
-    <rect x="0" y="0" width="260" height="140" rx="26" fill="#0ea5e9" opacity="0.18"/>
-    <circle cx="130" cy="70" r="44" fill="#ffffff" opacity="0.8"/>
-    <circle cx="130" cy="70" r="24" fill="#ef4444" opacity="0.65"/>
-    <circle cx="130" cy="70" r="10" fill="#111827" opacity="0.7"/>
-  </g>
-  <!-- Distance markers -->
-  <g opacity="0.55">
-    <rect x="515" y="650" width="80" height="36" rx="12" fill="#111827" opacity="0.35"/>
-    <rect x="515" y="700" width="120" height="36" rx="12" fill="#111827" opacity="0.26"/>
-    <rect x="515" y="750" width="95" height="36" rx="12" fill="#111827" opacity="0.22"/>
-  </g>
-  <!-- Spotlight behind coach position -->
-  <circle cx="440" cy="420" r="240" fill="url(#spot)"/>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        4: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky4" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#5fd0ff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green4" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#22c55e"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky4)"/>
-  <path d="M0,635 C170,575 360,640 520,595 C660,555 760,590 800,570 L800,1000 L0,1000 Z" fill="url(#green4)"/>
-  <!-- Whiteboard -->
-  <g transform="translate(120 280)">
-    <rect x="0" y="0" width="360" height="260" rx="26" fill="#ffffff" opacity="0.92"/>
-    <rect x="18" y="18" width="324" height="224" rx="18" fill="#f1f5f9"/>
-    <!-- Trajectory arrows -->
-    <path d="M70 180 C140 90 220 120 290 60" fill="none" stroke="#2563eb" stroke-width="10" stroke-linecap="round"/>
-    <path d="M285 58 L320 60 L300 90 Z" fill="#2563eb"/>
-    <path d="M75 190 C155 170 195 220 290 210" fill="none" stroke="#ef4444" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
-    <circle cx="76" cy="190" r="10" fill="#111827" opacity="0.65"/>
-  </g>
-  <!-- Overlay flight line -->
-  <path d="M120 720 C280 640 380 670 560 590" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="14 14" opacity="0.55"/>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        5: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky5" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#51c7ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green5" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
-    </linearGradient>
-    <filter id="blur7"><feGaussianBlur stdDeviation="7"/></filter>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky5)"/>
-  <path d="M0,640 C180,585 360,640 520,600 C660,565 760,585 800,575 L800,1000 L0,1000 Z" fill="url(#green5)"/>
-  <!-- Blurred gate -->
-  <g filter="url(#blur7)" opacity="0.28" transform="translate(505 530)">
-    <rect x="0" y="0" width="220" height="150" rx="20" fill="#111827"/>
-    <rect x="20" y="26" width="180" height="24" rx="10" fill="#9ca3af"/>
-    <rect x="20" y="66" width="120" height="18" rx="9" fill="#34d399"/>
-    <rect x="20" y="96" width="160" height="18" rx="9" fill="#60a5fa"/>
-  </g>
-  <!-- Benefit icons -->
-  <g filter="url(#shadow)">
-    <g transform="translate(120 210)">
-      <rect x="0" y="0" width="160" height="110" rx="26" fill="#ffffff" opacity="0.92"/>
-      <text x="30" y="74" font-size="54" font-family="Pretendard, sans-serif" font-weight="800" fill="#2563eb">%</text>
-    </g>
-    <g transform="translate(320 250)">
-      <path d="M0 26 Q0 0 26 0 H170 Q196 0 196 26 V110 Q196 136 170 136 H26 Q0 136 0 110 Z" fill="#fff7ed" stroke="#fb923c" stroke-width="8" opacity="0.96"/>
-      <circle cx="160" cy="28" r="10" fill="#fb923c"/>
-    </g>
-    <g transform="translate(170 380)">
-      <rect x="0" y="0" width="240" height="120" rx="30" fill="#eef2ff" stroke="#6366f1" stroke-width="8" opacity="0.96"/>
-      <circle cx="55" cy="60" r="18" fill="#6366f1"/>
-      <circle cx="95" cy="60" r="18" fill="#6366f1" opacity="0.75"/>
-      <circle cx="135" cy="60" r="18" fill="#6366f1" opacity="0.55"/>
-    </g>
-  </g>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        6: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky6" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#58ccff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green6" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#22c55e"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky6)"/>
-  <path d="M0,640 C180,580 360,650 520,600 C660,565 760,595 800,580 L800,1000 L0,1000 Z" fill="url(#green6)"/>
-  <!-- Speech bubbles -->
-  <g filter="url(#shadow)" opacity="0.98">
-    <g transform="translate(120 240)">
-      <rect x="0" y="0" width="210" height="96" rx="26" fill="#ffffff"/>
-      <path d="M60 96 L85 96 L70 122 Z" fill="#ffffff"/>
-      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">시즌 준비</text>
-    </g>
-    <g transform="translate(420 290)">
-      <rect x="0" y="0" width="220" height="96" rx="26" fill="#ffffff"/>
-      <path d="M160 96 L185 96 L175 122 Z" fill="#ffffff"/>
-      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">숏게임…</text>
-    </g>
-    <g transform="translate(210 430)">
-      <rect x="0" y="0" width="260" height="96" rx="26" fill="#ffffff"/>
-      <path d="M115 96 L140 96 L128 122 Z" fill="#ffffff"/>
-      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">백돌이 탈출</text>
-    </g>
-  </g>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        7: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="bg7" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#52caff"/><stop offset="0.55" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <filter id="blur9"><feGaussianBlur stdDeviation="9"/></filter>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <rect width="800" height="1000" fill="url(#bg7)"/>
-  <!-- Blurred chat background -->
-  <g filter="url(#blur9)" opacity="0.55" transform="translate(80 170)">
-    <rect x="0" y="0" width="640" height="560" rx="40" fill="#ffffff"/>
-    <rect x="40" y="70" width="420" height="72" rx="28" fill="#dbeafe"/>
-    <rect x="200" y="170" width="400" height="72" rx="28" fill="#e5e7eb"/>
-    <rect x="40" y="270" width="470" height="72" rx="28" fill="#dbeafe"/>
-  </g>
-  <!-- Foreground phone -->
-  <g filter="url(#shadow)" transform="translate(240 560)" opacity="0.98">
-    <rect x="0" y="0" width="320" height="380" rx="52" fill="#111827"/>
-    <rect x="20" y="26" width="280" height="320" rx="34" fill="#f8fafc"/>
-    <circle cx="160" cy="355" r="16" fill="#374151"/>
-  </g>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`,
-
-        8: `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
-  <defs>
-    <linearGradient id="sky8" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#4fc6ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-    <linearGradient id="green8" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
-    </linearGradient>
-    <radialGradient id="sun8" cx="70%" cy="16%" r="48%">
-      <stop offset="0" stop-color="#fff7c2" stop-opacity="0.95"/>
-      <stop offset="0.35" stop-color="#fff7c2" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#fff7c2" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="800" height="1000" fill="url(#sky8)"/>
-  <circle cx="580" cy="170" r="240" fill="url(#sun8)"/>
-  <path d="M0,620 C200,560 360,620 520,575 C660,540 760,575 800,555 L800,1000 L0,1000 Z" fill="url(#green8)"/>
-  <!-- Hole + ball drop moment -->
-  <ellipse cx="420" cy="720" rx="180" ry="46" fill="#0f766e" opacity="0.12"/>
-  <circle cx="430" cy="708" r="20" fill="#111827" opacity="0.66"/>
-  <circle cx="430" cy="708" r="9" fill="#000000" opacity="0.66"/>
-  <circle cx="430" cy="642" r="18" fill="#ffffff"/>
-  <path d="M430 660 C430 680 430 690 430 700" stroke="#ffffff" stroke-width="5" stroke-dasharray="10 10" opacity="0.6"/>
-  <!-- Cheer confetti -->
-  <g opacity="0.6">
-    <circle cx="120" cy="260" r="8" fill="#2563eb"/>
-    <circle cx="160" cy="300" r="6" fill="#ef4444"/>
-    <circle cx="200" cy="250" r="7" fill="#f59e0b"/>
-    <circle cx="650" cy="280" r="8" fill="#22c55e"/>
-    <circle cx="680" cy="320" r="6" fill="#6366f1"/>
-  </g>
-  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
-</svg>`
-      };
-
-      const svg = scenes[pageId] || scenes[1];
-      return h("img", { src: svgData(svg), className:"w-full h-full object-cover", alt:"fallback" });
-    }
-
-    function renderLines(lines) {
-      const children = [];
-      (lines || []).forEach((line, idx) => {
-        children.push(h("span", { key:`l-${idx}` }, line));
-        if (idx < lines.length - 1) children.push(h("br", { key:`br-${idx}` }));
-      });
-      return h("span", null, ...children);
-    }
-
-    function CardPage({ page, imageUrl, onPrev, onNext, index, total }) {
-      const isFirst = index === 0;
-      const isLast = index === total - 1;
-
-      return h("div", { className:"relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col border border-gray-100" },
-        h("div", { className:"absolute inset-0 w-full h-full" },
-          imageUrl
-            ? h("img", { src:imageUrl, alt:"scene", className:"w-full h-full object-cover" })
-            : h(FallbackScene, { pageId: page.id }),
-          h("div", { className:"absolute inset-0 bg-gradient-to-b from-white/45 via-white/10 to-white/55" })
-        ),
-
-        h("div", { className:"relative z-10 h-full flex flex-col justify-between p-8 md:p-10" },
-          h("div", { className:"space-y-2" },
-            page.subtitle
-              ? h("span", { className:"inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" }, page.subtitle)
-              : null,
-
-            page.titleLines
-              ? h("h1", { className:"text-[1.35rem] md:text-3xl font-black text-gray-900 leading-[1.2] tracking-tight break-keep" }, renderLines(page.titleLines))
-              : null,
-
-            page.highlightText
-              ? h("div", { className:"mt-1" },
-                  h("span", { className:`text-[1.65rem] md:text-4xl font-black ${page.highlightClass || ""}` }, page.highlightText)
-                )
-              : null,
-
-            page.emphasizeText
-              ? h("div", { className:"mt-1" },
-                  h("span", { className:`text-[1.45rem] md:text-3xl font-black ${page.emphasizeClass || ""}` }, page.emphasizeText)
-                )
-              : null,
-
-            page.descriptionLines
-              ? h("p", { className:"text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/60 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" },
-                  renderLines(page.descriptionLines)
-                )
-              : null
+    function CardPage({ data, imageUrl }) {
+      return (
+        React.createElement("div", { className: "relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-2xl bg-white flex flex-col border border-gray-100" },
+          React.createElement("div", { className: "absolute inset-0 w-full h-full bg-blue-50" },
+            imageUrl
+              ? React.createElement("img", {
+                  src: imageUrl,
+                  alt: "Page Background",
+                  className: "w-full h-full object-cover opacity-50 transition-opacity duration-700"
+                })
+              : React.createElement("div", { className: "w-full h-full flex items-center justify-center bg-blue-100 animate-pulse" },
+                  React.createElement("span", { className: "text-blue-300 font-bold" }, "이미지 로딩 중...")
+                ),
+            React.createElement("div", { className: "absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-black/20" })
           ),
 
-          h("div", { className:"flex-1 flex flex-col justify-center py-4" },
-            page.points && page.points.length
-              ? h("ul", { className:"space-y-3" },
-                  ...page.points.map((pt, i) =>
-                    h("li", { key:i, className:"bg-white/88 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start" },
-                      h("span", { className:"mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" }, "✓"),
-                      h("span", { className:"leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
+          React.createElement("div", { className: "relative z-10 p-7 h-full flex flex-col" },
+            React.createElement("div", { className: "mb-6" },
+              data.subtitle ? React.createElement("div", {
+                className: "inline-block px-4 py-1.5 bg-blue-600 text-white text-[13px] font-black rounded-lg mb-4 shadow-lg shadow-blue-200 uppercase tracking-tighter"
+              }, data.subtitle) : null,
+
+              React.createElement("div", {
+                className: "text-[28px] md:text-[32px] font-black text-gray-900 leading-[1.2] mb-5 tracking-tight drop-shadow-sm"
+              }, data.title),
+
+              (data.description && typeof data.description === "string")
+                ? React.createElement("div", { className: "bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 shadow-sm" },
+                    React.createElement("p", { className: "text-gray-800 font-bold text-[18px] leading-relaxed whitespace-pre-line" }, data.description)
+                  )
+                : null
+            ),
+
+            React.createElement("div", { className: "flex-1 flex flex-col justify-center gap-4" },
+              data.points ? React.createElement("div", { className: "space-y-3.5" },
+                data.points.map((point, i) => (
+                  React.createElement("div", {
+                    key: i,
+                    className: "bg-white/95 backdrop-blur-xl p-4.5 rounded-[1.25rem] border-2 border-white shadow-xl flex items-center gap-4 transform transition-all active:scale-95",
+                    style: { boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05)" }
+                  },
+                    React.createElement("div", { className: "flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center" },
+                      React.createElement("span", { className: "text-blue-600 font-black text-xl" }, "✓")
+                    ),
+                    React.createElement("span", { className: "text-gray-900 font-black text-[19px] tracking-tight" },
+                      String(point).replace("✔", "").replace("•", "").trim()
                     )
                   )
-                )
-              : null
-          ),
+                ))
+              ) : null,
 
-          h("div", { className:"space-y-3" },
-            h("div", { className:"flex items-center justify-between" },
-              h("button", {
-                onClick:onPrev, disabled:isFirst,
-                className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
-                  isFirst ? "bg-white/45 text-gray-300 border-gray-200" : "bg-white/90 text-gray-700 border-gray-200 hover:bg-white"
-                }`
-              }, "◀"),
-              h("div", { className:"text-[11px] font-black text-gray-500 bg-white/70 backdrop-blur px-3 py-1.5 rounded-full border border-gray-100" },
-                `${index+1} / ${total}`
-              ),
-              h("button", {
-                onClick:onNext, disabled:isLast,
-                className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
-                  isLast ? "bg-white/45 text-gray-300 border-gray-200" : "bg-white/90 text-gray-700 border-gray-200 hover:bg-white"
-                }`
-              }, "▶")
+              data.benefits ? React.createElement("div", { className: "grid grid-cols-1 gap-5" },
+                data.benefits.map((benefit, i) => (
+                  React.createElement("div", {
+                    key: i,
+                    className: "bg-white p-6 rounded-[2rem] shadow-2xl border-b-4 border-blue-200 flex flex-col items-center text-center floating relative overflow-hidden",
+                    style: { animationDelay: `${i * 0.3}s` }
+                  },
+                    React.createElement("div", { className: "absolute top-0 left-0 w-2 h-full bg-blue-500" }),
+                    React.createElement("span", { className: "text-[15px] font-black text-blue-600 mb-2 tracking-tighter bg-blue-50 px-3 py-1 rounded-full" }, benefit.label),
+                    React.createElement("span", { className: "text-[34px] font-black text-gray-900 leading-[1.1] mb-2 whitespace-pre-line" }, benefit.value),
+                    benefit.sub ? React.createElement("span", { className: "text-[13px] text-gray-500 font-bold leading-tight" }, benefit.sub) : null
+                  )
+                ))
+              ) : null
             ),
-            h("div", { className:"flex justify-center" },
-              h("div", { className:"text-[9px] text-gray-400 font-black bg-white/65 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase" },
-                "SEUSEUNGNIM X SEO SU YEON"
+
+            React.createElement("div", { className: "flex justify-center mt-6" },
+              React.createElement("div", {
+                className: "text-[11px] text-gray-500 font-black bg-white/80 backdrop-blur-sm px-4 py-2 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-2"
+              },
+                React.createElement("span", { className: "w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" }),
+                "스승님 X 서수연 프로 숏게임 마스터"
               )
             )
           )
@@ -612,84 +322,220 @@ Add bottom nav “◀ 8/8 ▶” inside card.
       );
     }
 
-    function App(){
-      const apiKey = useMemo(() => localStorage.getItem("GEMINI_API_KEY") || "", []);
-      const [activeIndex, setActiveIndex] = useState(0);
-      const [images, setImages] = useState({});
+    function ApiKeyGate({ onDone }) {
+      const [key, setKey] = useState(getStoredApiKey());
+      const [open, setOpen] = useState(!getStoredApiKey());
 
-      const page = PAGES[activeIndex];
+      const save = () => {
+        setStoredApiKey(key);
+        setOpen(false);
+        onDone?.();
+      };
 
-      useEffect(() => {
-        let mounted = true;
-        (async () => {
-          if (!apiKey) return;
-          if (images[page.id]) return;
-          const url = await genImage(apiKey, page.prompt);
-          if (!mounted) return;
-          if (url) setImages(prev => ({ ...prev, [page.id]: url }));
-        })();
-        return () => { mounted = false; };
-      }, [apiKey, page.id, page.prompt, images]);
+      const skip = () => {
+        setOpen(false);
+        onDone?.();
+      };
 
-      const goPrev = useCallback(() => setActiveIndex(i => Math.max(0, i-1)), []);
-      const goNext = useCallback(() => setActiveIndex(i => Math.min(PAGES.length-1, i+1)), []);
-      const handleApply = useCallback(() => window.open(CTA_URL, "_blank"), []);
+      if (!open) return null;
 
-      return h("div", { className:"min-h-screen bg-slate-50 flex flex-col items-center pb-28" },
-        h("div", { className:"w-full max-w-md mx-auto flex flex-col gap-6 p-4" },
-          h("div", { className:"bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex items-center justify-between" },
-            h("div", { className:"flex flex-col" },
-              h("span", { className:"text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Premium Lesson"),
-              h("span", { className:"text-lg font-black text-gray-900" }, "서수연 프로의 숏게임")
+      return (
+        React.createElement("div", { className: "fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center p-4" },
+          React.createElement("div", { className: "w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-gray-100" },
+            React.createElement("div", { className: "text-xl font-black text-gray-900 mb-2" }, "Gemini API 키 입력"),
+            React.createElement("p", { className: "text-sm text-gray-600 leading-relaxed mb-4" },
+              "이미지 자동생성을 켜려면 API 키가 필요합니다. (브라우저에 키를 넣으면 노출될 수 있습니다. 운영용은 서버 프록시 권장)"
             ),
-            h("div", { className:"w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" },
-              h("span", { className:"text-xl" }, "🏌️‍♀️")
-            )
-          ),
-
-          h(CardPage, {
-            page,
-            imageUrl: images[page.id],
-            onPrev: goPrev,
-            onNext: goNext,
-            index: activeIndex,
-            total: PAGES.length
-          }),
-
-          h("div", { className:"pt-2" },
-            h("button", {
-              onClick: handleApply,
-              className:"tap w-full py-6 bg-[#FEE500] text-[#3c1e1e] font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 hover:bg-[#FDD800] active:scale-[0.97] transition-all"
-            },
-              h("img", {
-                src:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
-                className:"w-8 h-8",
-                alt:"kakao"
-              }),
-              "숏게임 클래스 신청하기"
-            ),
-            h("p", { className:"mt-4 text-center text-gray-400 text-xs font-medium" }, "© 2026 SEUSEUNGNIM X PRO SEO SU YEON")
-          )
-        ),
-
-        h("div", { className:"fixed bottom-0 left-0 right-0 p-5 max-w-md mx-auto z-30" },
-          h("button", {
-            onClick: handleApply,
-            className:"tap w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-lg rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-4 border-white"
-          },
-            h("img", {
-              src:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
-              className:"w-6 h-6",
-              alt:"kakao"
+            React.createElement("input", {
+              className: "w-full rounded-2xl border border-gray-200 px-4 py-3 font-bold outline-none focus:ring-4 focus:ring-blue-100",
+              placeholder: "AIza... 형태",
+              value: key,
+              onChange: (e) => setKey(e.target.value)
             }),
-            "지금 바로 문의하기"
+            React.createElement("div", { className: "flex gap-3 mt-5" },
+              React.createElement("button", {
+                className: "flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-black active:scale-95 transition",
+                onClick: skip
+              }, "지금은 건너뛰기"),
+              React.createElement("button", {
+                className: "flex-1 py-3 rounded-2xl bg-blue-600 text-white font-black active:scale-95 transition",
+                onClick: save
+              }, "저장하고 시작")
+            )
           )
         )
       );
     }
 
-    const rootEl = document.getElementById("root");
-    createRoot(rootEl).render(h(React.StrictMode, null, h(App)));
+    /***********************
+     * Main App
+     ***********************/
+    function App() {
+      const [state, setState] = useState({ isGenerating: true, images: {}, progress: 0 });
+      const [activePageIndex, setActivePageIndex] = useState(0);
+      const [apiKeyVersion, setApiKeyVersion] = useState(0);
+
+      const apiKey = useMemo(() => getStoredApiKey(), [apiKeyVersion]);
+
+      const initImages = useCallback(async () => {
+        setState((prev) => ({ ...prev, isGenerating: true, progress: 0 }));
+
+        const newImages = {};
+        let count = 0;
+
+        for (const page of CARD_PAGES) {
+          if (count > 0) await sleep(500);
+
+          const url = await generateCardImage(page.backgroundImagePrompt, apiKey);
+          newImages[page.id] = url || `https://picsum.photos/800/1000?random=${page.id}`;
+
+          count++;
+          setState((prev) => ({
+            ...prev,
+            images: { ...newImages },
+            progress: (count / CARD_PAGES.length) * 100
+          }));
+        }
+
+        setState((prev) => ({ ...prev, isGenerating: false }));
+      }, [apiKey]);
+
+      useEffect(() => {
+        // if no api key, still proceed (picsum fallback)
+        initImages();
+      }, [initImages]);
+
+      const handleApply = () => {
+        window.open("http://pf.kakao.com/_kxawRn/chat", "_blank");
+      };
+
+      const nextCard = () => {
+        setActivePageIndex((prev) => Math.min(prev + 1, CARD_PAGES.length - 1));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      const prevCard = () => {
+        setActivePageIndex((prev) => Math.max(prev - 1, 0));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      // Swipe handling
+      const touchRef = useRef({ x: 0, y: 0, t: 0 });
+
+      const onTouchStart = (e) => {
+        const t = e.touches[0];
+        touchRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+      };
+
+      const onTouchEnd = (e) => {
+        const start = touchRef.current;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - start.x;
+        const dy = t.clientY - start.y;
+        const dt = Date.now() - start.t;
+
+        // horizontal swipe threshold
+        if (Math.abs(dx) > 50 && Math.abs(dy) < 80 && dt < 600) {
+          if (dx < 0) nextCard();
+          else prevCard();
+        }
+      };
+
+      // if generating and nothing ready, show loading
+      if (state.isGenerating && Object.keys(state.images).length === 0) {
+        return React.createElement(React.Fragment, null,
+          React.createElement(ApiKeyGate, { onDone: () => setApiKeyVersion((v) => v + 1) }),
+          React.createElement(LoadingScreen, { progress: state.progress || 0 })
+        );
+      }
+
+      const activePage = CARD_PAGES[activePageIndex];
+
+      return (
+        React.createElement(React.Fragment, null,
+          React.createElement(ApiKeyGate, { onDone: () => setApiKeyVersion((v) => v + 1) }),
+
+          React.createElement("div", {
+            className: "min-h-screen bg-slate-100 flex flex-col items-center",
+            onTouchStart,
+            onTouchEnd
+          },
+            React.createElement("div", { className: "w-full max-w-md mx-auto min-h-screen flex flex-col shadow-2xl bg-white relative" },
+
+              /* Top dots */
+              React.createElement("div", { className: "flex justify-center gap-2 py-5 bg-white sticky top-0 z-20" },
+                CARD_PAGES.map((_, idx) => (
+                  React.createElement("div", {
+                    key: idx,
+                    className: `h-2 rounded-full transition-all duration-300 ${idx === activePageIndex ? "w-8 bg-blue-600" : "w-2 bg-gray-200"}`
+                  })
+                ))
+              ),
+
+              /* Content area */
+              React.createElement("div", { className: "flex-1 p-5 pb-56 overflow-y-auto safe-bottom" },
+                React.createElement(CardPage, {
+                  data: activePage,
+                  imageUrl: state.images[activePage.id]
+                }),
+
+                React.createElement("div", { className: "mt-10 flex flex-col items-center gap-6" },
+                  activePageIndex < CARD_PAGES.length - 1
+                    ? React.createElement("button", {
+                        onClick: nextCard,
+                        className: "w-full py-5 bg-gray-900 text-white font-black text-lg rounded-[1.5rem] shadow-xl hover:bg-black transition-all active:scale-95"
+                      }, "다음 내용 확인하기 →")
+                    : null,
+
+                  React.createElement("div", { className: "flex justify-between w-full px-4 mb-6" },
+                    React.createElement("button", {
+                      onClick: prevCard,
+                      disabled: activePageIndex === 0,
+                      className: `text-sm font-black transition-opacity ${activePageIndex === 0 ? "opacity-0" : "opacity-100 text-blue-600"}`
+                    }, "← 이전"),
+                    React.createElement("span", { className: "text-sm text-gray-400 font-black tracking-widest" },
+                      `${activePageIndex + 1} / ${CARD_PAGES.length}`
+                    ),
+                    React.createElement("button", {
+                      onClick: () => { setApiKeyVersion((v) => v + 1); initImages(); },
+                      className: "text-sm font-black text-gray-400 hover:text-gray-700"
+                    }, "이미지 재생성")
+                  ),
+
+                  React.createElement("div", { className: "text-[11px] text-gray-400 font-bold text-center px-6 -mt-2" },
+                    "좌우로 밀어서 넘길 수 있어요 (스와이프)"
+                  )
+                )
+              ),
+
+              /* Fixed CTA */
+              React.createElement("div", { className: "fixed left-0 right-0 p-5 max-w-md mx-auto z-40 fixed-cta-wrap" },
+                React.createElement("button", {
+                  onClick: handleApply,
+                  className: "w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-[22px] rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-[6px] border-white active:scale-95 transition-all transform hover:-translate-y-1"
+                },
+                  React.createElement("img", {
+                    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+                    className: "w-8 h-8",
+                    alt: "kakao"
+                  }),
+                  "지금 바로 신청하기"
+                ),
+                React.createElement("p", { className: "text-center mt-3 text-[11px] text-gray-400 font-bold" }, "카카오톡 채널로 즉시 연결됩니다")
+              )
+            )
+          )
+        )
+      );
+    }
+
+    /***********************
+     * Mount
+     ***********************/
+    const root = createRoot(document.getElementById("root"));
+    root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
   </script>
 </body>
 </html>
+
+
