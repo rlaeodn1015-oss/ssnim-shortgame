@@ -38,20 +38,41 @@
     import { GoogleGenAI } from "@google/genai";
     const h = React.createElement;
 
+    const CTA_URL = "http://pf.kakao.com/_kxawRn/chat";
+
     const GLOBAL_PROMPT_PREFIX = `
-- Output: 4:5 vertical card scene image for mobile.
-- Must keep safe-area padding 8% on all sides. No cropping.
-- Include bottom navigation UI visually “◀ 1/8 ▶” and CTA button shape at bottom center (visual only).
-- Korean text only, Pretendard-like, readable, not oversized.
+[CORE OUTPUT]
+- 4:5 vertical card scene image for mobile.
+- Keep SAFE AREA padding 8% on all sides. No cropping.
+- Include bottom navigation UI visually “◀ n/8 ▶” inside the card bottom (visual only).
+- Include a CTA button shape at the bottom center (visual only).
+- Korean text only. Pretendard-like modern sans-serif. Not oversized. Natural line breaks.
 - No real photos. No app mockups. No screenshots.
-- Realistic 3D humans only. No cute/chibi. No Pixar/Disney.
-- Coach: beautiful Korean female golf pro, slim athletic, cap, golfwear, confident coach vibe, centered.
-- Students: mixed amateurs, slightly awkward posture, relatable.
-- Golf-only scenes: green/putting/bunker/approach/outdoor course. No office, no plain single-color.
-- Each page must be a specific SCENE showing emotion + action + flow.
-- Benefit page: coupon/%/ticket/coin-style benefit icons (not cash).
-- Apply page: blurred chat-style background with 2–3 bubbles (generic, not screenshot).
-- Do not merge discounts. Keep: “레슨 15% 할인 + 2인 동반 시 연습장비 50% 지원(최대 2만원/조건별)”.
+- Golf-only environment: green / putting / bunker / approach / outdoor course. No office. No plain single color.
+
+[CHARACTER STYLE — MUST]
+- Realistic 3D humans ONLY. High-end commercial advertising look (Midjourney realistic 3D ad style).
+- Natural body proportions, natural faces, photorealistic skin texture.
+- NOT cute. NOT chibi. NOT Pixar. NOT Disney. NOT anime.
+
+[COACH — MUST]
+- Beautiful Korean female golf professional (서수연 프로 느낌), slim athletic, modern golf cap,
+  fitted golf top, golf skirt or slacks, confident coaching posture, slight smile, professional vibe.
+- Coach role must be obvious, often centered.
+
+[STUDENTS]
+- Mixed male/female amateurs, everyday golf wear, slightly awkward posture,
+  relatable expressions (frustrated / focused / surprised).
+
+[SCENE DIRECTION — MUST]
+- Each page is a specific SCENE showing emotion + action + flow (not generic golf background).
+- Use cinematic depth of field, sunlight, soft lens flare when relevant.
+- Composition: foreground characters + midground action + background scenery.
+
+[SPECIAL PAGES]
+- Benefit page: coupon / percent / ticket / coin-style BENEFIT icons (graphic icons only; no cash).
+- Apply page: blurred chat-style background with 2–3 Korean bubbles (generic style; not a screenshot).
+- Do NOT merge discounts. Keep: “레슨 15% 할인 + 2인 동반 시 연습장비 50% 지원(최대 2만원/조건별)”.
     `.trim();
 
     const PAGES = [
@@ -64,12 +85,14 @@
         descriptionLines: ["스승님 X 서수연 프로"],
         prompt: `
 [PAGE 1 — 시즌 시작(후킹)]
-푸른 하늘, 넓은 그린, 따뜻한 햇살, 멀리 작은 골프 카트, 살짝 렌즈 플레어.
-중앙: 예쁜 한국인 여자 골프프로(코치) 자신감 있는 표정, 프리미엄 골프웨어.
-옆: 1-2명 아마추어 골퍼, 설레는 표정.
-감정: “아… 시즌 시작이구나”.
-텍스트는 한국어, 안전영역 내. 하단에 ◀ 1/8 ▶ 과 CTA 버튼 형태 포함.
-        `.trim()
+Scene: “아… 시즌 시작이구나”
+Background: wide outdoor golf course panorama, bright blue sky, wide green, warm sunlight,
+a small distant golf cart, gentle lens flare, fresh season opening vibe.
+Action/Emotion: coach leads the moment confidently, students feel motivated/excited.
+Foreground: coach centered, 1–2 amateurs nearby reacting positively.
+Add subtle card frame feeling + safe area.
+Add bottom nav “◀ 1/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 2,
@@ -80,13 +103,13 @@
         descriptionLines: ["연습장에서는 프로,", "필드에서는 백돌이."],
         prompt: `
 [PAGE 2 — 분노 + 아쉬움(문제 공감)]
-그린 주변. 홀컵 가까이에 멈춘 공(아쉬운 근접 미스).
-퍼터 들고 머리 긁적이는 아마추어(분노+아쉬움 표정).
-뒤쪽은 흐릿한 스코어보드(더블보기 느낌) — 과한 디테일 없이 블러.
-코치(예쁜 한국인 여자 프로)는 공감/진정시키며 설명하는 포즈.
-감정: “아 씨… 또 여기서 무너졌네”.
-하단 ◀ 2/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+Scene: “아 씨… 또 여기서 무너졌네”
+Background: around the green, ball stopped very close to the hole (painful near-miss),
+fringe/green detail, soft sunlight, shallow depth of field.
+Include a blurred scoreboard in the back suggesting double bogey (abstract/blur; not readable UI).
+Action/Emotion: amateur holding putter, scratching head, frustrated; coach empathizes and explains.
+Add bottom nav “◀ 2/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 3,
@@ -94,13 +117,13 @@
         titleLines: ["서수연 프로", "숏게임 클래스"],
         descriptionLines: ["실전만 집중하는 2시간"],
         prompt: `
-[PAGE 3 — 솔루션(프로 등장)]
-숏게임 연습존. 타겟 매트, 어프로치 거리 마커, 작은 깃발/콘.
-코치(예쁜 한국인 여자 프로) 뒤에 은은한 라이트(히어로 느낌).
-코치는 웨지 자세 데모, 아마추어는 집중해서 보는 장면.
-감정: “아 여기서 배우는구나”.
-하단 ◀ 3/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+[PAGE 3 — 프로 등장(솔루션)]
+Scene: “아 여기서 배우는구나”
+Background: short game practice zone with target mat, approach distance markers, small cones/flag,
+coach has subtle rim light/hero light behind her.
+Action/Emotion: coach demonstrates wedge/chip technique; amateur watches focused with “aha”.
+Add bottom nav “◀ 3/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 4,
@@ -108,12 +131,12 @@
         points: ["✔ 이론 최소", "✔ 실전 집중", "✔ 소수정예 단독", "✔ 날짜 직접 선택"],
         prompt: `
 [PAGE 4 — 체계적인 코칭(특징)]
-이동식 작은 화이트보드, 궤적 화살표 그래픽.
-공의 궤적 라인 오버레이(가벼운 그래픽).
-코치가 보드 가리키며 설명, 아마추어는 고개 끄덕.
-감정: “아 그냥 치는게 아니네”.
-하단 ◀ 4/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+Scene: “아 그냥 치는게 아니네”
+Background: practice green + a small portable whiteboard,
+trajectory arrow graphics on the board, subtle ball flight overlay line.
+Action/Emotion: coach points at board; amateur nods, understanding.
+Add bottom nav “◀ 4/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 5,
@@ -125,13 +148,14 @@
         ],
         prompt: `
 [PAGE 5 — 혜택 폭발(핵심)]
-혜택 아이콘 연출: 티켓 쿠폰, % 아이콘, 바우처 태그, 코인/포인트 아이콘이 가볍게 떨어지는 느낌.
-실제 돈 비주얼 금지(현금/지폐/동전 사실적 표현 X) — 그래픽 아이콘만.
-배경에 연습장 입장 게이트가 아주 흐릿하게 보임.
-코치와 아마추어는 “오 혜택 괜찮은데?” 표정.
-할인 합산 금지. 문구는 그대로 유지.
-하단 ◀ 5/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+Scene: “오 혜택 괜찮은데?”
+Background: benefit icons raining lightly: coupon tickets, % icons, voucher tags,
+coin/point-style graphic icons (NOT cash, NOT real money visuals).
+Add a very blurred practice range entrance gate/check-in gate in the far background.
+Action/Emotion: students surprised/happy; coach confident smile.
+IMPORTANT: do NOT merge discounts into one percent.
+Add bottom nav “◀ 5/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 6,
@@ -144,12 +168,12 @@
         ],
         prompt: `
 [PAGE 6 — 내 얘기네(추천 대상)]
-서로 다른 3~4명의 아마추어 골퍼(남녀 혼합), 각자 다른 표정/상황.
-말풍선 키워드: “시즌 준비”, “숏게임…”, “백돌이 탈출”.
-코치는 뒤/중앙에서 자신감 있게 ‘해결해줄게’ 포지션.
-감정: “어 나잖아”.
-하단 ◀ 6/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+Scene: “어 나잖아”
+Background: practice green with multiple amateurs (3–4) male/female, different expressions.
+Speech bubbles keywords in Korean: “시즌 준비”, “숏게임…”, “백돌이 탈출”.
+Action/Emotion: each amateur reflects their situation; coach behind/center as confident helper.
+Add bottom nav “◀ 6/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 7,
@@ -163,15 +187,16 @@
         ],
         prompt: `
 [PAGE 7 — 지금 행동(전환)]
-흐릿한 채팅 UI 배경(카카오톡 느낌 ‘스타일’만, 스크린샷/목업 금지).
-말풍선 2~3개(한국어):
+Scene: “아 이렇게 신청하는구나”
+Background: blurred chat-style UI background (generic style; NOT a screenshot; NOT an app mockup),
+include 2–3 Korean chat bubbles:
 “숏게임 클래스 문의드려요”
 “날짜 언제 가능할까요?”
-(선택) “2인도 가능할까요?”
-전경: 캐릭터가 휴대폰을 터치하는 액션.
-감정: “아 이렇게 신청하는구나”.
-하단 ◀ 7/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+(optional) “2인도 가능할까요?”
+Foreground: a realistic 3D hand tapping a smartphone screen (action).
+Coach subtly present as helpful presence.
+Add bottom nav “◀ 7/8 ▶” and CTA button shape inside card.
+        `.trim(),
       },
       {
         id: 8,
@@ -180,16 +205,15 @@
         hasCta: true,
         prompt: `
 [PAGE 8 — 결과 상상(CTA)]
-홀컵에 공이 들어가는 순간(다이내믹), 햇살, 골프장 파노라마 느낌.
-아마추어들이 환호(작은 그룹), 코치는 뿌듯한 미소.
-감정: “나도 저렇게 되고 싶다”.
-버튼 텍스트: “숏게임 클래스 신청하기”
-하단 ◀ 8/8 ▶ + CTA 버튼 형태. 안전영역 8%.
-        `.trim()
+Scene: “나도 저렇게 되고 싶다”
+Background: ball dropping into the hole at the exact moment, dynamic motion,
+sunlight + lens flare, panoramic course vibe, depth of field.
+Action/Emotion: amateurs cheering, joyful body language; coach proud smile.
+Include button text area for “숏게임 클래스 신청하기” and CTA button shape.
+Add bottom nav “◀ 8/8 ▶” inside card.
+        `.trim(),
       }
     ];
-
-    const CTA_URL = "http://pf.kakao.com/_kxawRn/chat";
 
     async function genImage(apiKey, pagePrompt) {
       if (!apiKey) return null;
@@ -202,9 +226,7 @@
         });
         const parts = response?.candidates?.[0]?.content?.parts || [];
         for (const p of parts) {
-          if (p.inlineData) {
-            return `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`;
-          }
+          if (p.inlineData) return `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`;
         }
         return null;
       } catch (e) {
@@ -213,103 +235,381 @@
       }
     }
 
+    function svgData(svg) {
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
     function FallbackScene({ pageId }) {
-      return h("div", { className:"w-full h-full relative bg-gradient-to-b from-sky-200 via-sky-100 to-emerald-100" },
-        h("div", { className:"absolute inset-0 opacity-[0.25]" },
-          h("div", { className:"w-full h-full", style:{
-            backgroundImage: `
-              radial-gradient(circle at 20% 20%, rgba(37,99,235,.28) 0 2px, transparent 3px),
-              radial-gradient(circle at 70% 35%, rgba(37,99,235,.22) 0 2px, transparent 3px),
-              radial-gradient(circle at 40% 75%, rgba(16,185,129,.18) 0 2px, transparent 3px)
-            `,
-            backgroundSize:"80px 80px",
-            backgroundPosition:"0 0, 18px 12px, 10px 30px"
-          }})
-        ),
-        h("div", { className:"absolute bottom-0 left-0 right-0 h-[38%] opacity-90 bg-gradient-to-t from-emerald-200 to-transparent" }),
-        h("div", { className:"absolute top-5 left-5 text-xs font-black text-white/90 drop-shadow" }, `SCENE ${pageId}`),
-        h("div", { className:"absolute inset-0 flex items-center justify-center" },
-          h("div", { className:"flex gap-4 text-4xl opacity-90" }, "⛳️","🏌️‍♀️","🏌️","🏌️‍♂️")
-        )
-      );
+      // Page-specific richer fallback (always non-empty, scene-like)
+      const scenes = {
+        1: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#5ac8ff"/><stop offset="0.55" stop-color="#dff5ff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#bff3d6"/><stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="75%" cy="18%" r="45%">
+      <stop offset="0" stop-color="#fff7c2" stop-opacity="0.95"/>
+      <stop offset="0.35" stop-color="#fff7c2" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fff7c2" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky)"/>
+  <circle cx="620" cy="180" r="220" fill="url(#sun)"/>
+  <path d="M0,620 C160,560 320,600 440,560 C560,520 680,540 800,510 L800,1000 L0,1000 Z" fill="url(#green)" opacity="0.98"/>
+  <path d="M0,705 C200,650 360,700 520,650 C650,610 740,640 800,625 L800,1000 L0,1000 Z" fill="#0ea5e9" opacity="0.08"/>
+  <!-- Distant cart -->
+  <g transform="translate(560 560) scale(0.8)" opacity="0.35" filter="url(#blur8)">
+    <rect x="0" y="30" width="140" height="40" rx="14" fill="#1f2937"/>
+    <rect x="25" y="0" width="90" height="35" rx="10" fill="#374151"/>
+    <circle cx="35" cy="80" r="14" fill="#111827"/>
+    <circle cx="110" cy="80" r="14" fill="#111827"/>
+  </g>
+  <!-- Lens flare -->
+  <g opacity="0.35">
+    <circle cx="610" cy="205" r="28" fill="#ffffff" opacity="0.25"/>
+    <circle cx="520" cy="255" r="16" fill="#ffffff" opacity="0.18"/>
+    <circle cx="455" cy="310" r="10" fill="#ffffff" opacity="0.12"/>
+  </g>
+  <!-- Card vignette -->
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        2: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#62d0ff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c6f7dd"/><stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky2)"/>
+  <path d="M0,610 C180,550 360,610 520,560 C650,520 740,560 800,535 L800,1000 L0,1000 Z" fill="url(#green2)"/>
+  <!-- Hole area -->
+  <ellipse cx="455" cy="710" rx="170" ry="40" fill="#0f766e" opacity="0.12"/>
+  <circle cx="465" cy="700" r="18" fill="#111827" opacity="0.65"/>
+  <circle cx="465" cy="700" r="8" fill="#000000" opacity="0.65"/>
+  <!-- Near-miss ball -->
+  <circle cx="520" cy="688" r="16" fill="#ffffff"/>
+  <circle cx="520" cy="688" r="16" fill="none" stroke="#e5e7eb" stroke-width="3"/>
+  <!-- Blurred scoreboard -->
+  <g filter="url(#blur6)" opacity="0.38" transform="translate(85 165)">
+    <rect x="0" y="0" width="280" height="120" rx="18" fill="#111827"/>
+    <rect x="18" y="18" width="244" height="26" rx="10" fill="#374151"/>
+    <rect x="18" y="56" width="160" height="22" rx="9" fill="#ef4444" opacity="0.8"/>
+    <rect x="18" y="84" width="200" height="18" rx="9" fill="#9ca3af"/>
+  </g>
+  <!-- Vignette -->
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        3: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky3" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#53c7ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green3" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="55%" cy="42%" r="38%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky3)"/>
+  <path d="M0,640 C180,580 360,640 520,600 C660,565 760,590 800,575 L800,1000 L0,1000 Z" fill="url(#green3)"/>
+  <!-- Target mat -->
+  <g transform="translate(150 650)">
+    <rect x="0" y="0" width="260" height="140" rx="26" fill="#0ea5e9" opacity="0.18"/>
+    <circle cx="130" cy="70" r="44" fill="#ffffff" opacity="0.8"/>
+    <circle cx="130" cy="70" r="24" fill="#ef4444" opacity="0.65"/>
+    <circle cx="130" cy="70" r="10" fill="#111827" opacity="0.7"/>
+  </g>
+  <!-- Distance markers -->
+  <g opacity="0.55">
+    <rect x="515" y="650" width="80" height="36" rx="12" fill="#111827" opacity="0.35"/>
+    <rect x="515" y="700" width="120" height="36" rx="12" fill="#111827" opacity="0.26"/>
+    <rect x="515" y="750" width="95" height="36" rx="12" fill="#111827" opacity="0.22"/>
+  </g>
+  <!-- Spotlight behind coach position -->
+  <circle cx="440" cy="420" r="240" fill="url(#spot)"/>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        4: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky4" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#5fd0ff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green4" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky4)"/>
+  <path d="M0,635 C170,575 360,640 520,595 C660,555 760,590 800,570 L800,1000 L0,1000 Z" fill="url(#green4)"/>
+  <!-- Whiteboard -->
+  <g transform="translate(120 280)">
+    <rect x="0" y="0" width="360" height="260" rx="26" fill="#ffffff" opacity="0.92"/>
+    <rect x="18" y="18" width="324" height="224" rx="18" fill="#f1f5f9"/>
+    <!-- Trajectory arrows -->
+    <path d="M70 180 C140 90 220 120 290 60" fill="none" stroke="#2563eb" stroke-width="10" stroke-linecap="round"/>
+    <path d="M285 58 L320 60 L300 90 Z" fill="#2563eb"/>
+    <path d="M75 190 C155 170 195 220 290 210" fill="none" stroke="#ef4444" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="76" cy="190" r="10" fill="#111827" opacity="0.65"/>
+  </g>
+  <!-- Overlay flight line -->
+  <path d="M120 720 C280 640 380 670 560 590" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="14 14" opacity="0.55"/>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        5: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky5" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#51c7ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green5" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="blur7"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky5)"/>
+  <path d="M0,640 C180,585 360,640 520,600 C660,565 760,585 800,575 L800,1000 L0,1000 Z" fill="url(#green5)"/>
+  <!-- Blurred gate -->
+  <g filter="url(#blur7)" opacity="0.28" transform="translate(505 530)">
+    <rect x="0" y="0" width="220" height="150" rx="20" fill="#111827"/>
+    <rect x="20" y="26" width="180" height="24" rx="10" fill="#9ca3af"/>
+    <rect x="20" y="66" width="120" height="18" rx="9" fill="#34d399"/>
+    <rect x="20" y="96" width="160" height="18" rx="9" fill="#60a5fa"/>
+  </g>
+  <!-- Benefit icons -->
+  <g filter="url(#shadow)">
+    <g transform="translate(120 210)">
+      <rect x="0" y="0" width="160" height="110" rx="26" fill="#ffffff" opacity="0.92"/>
+      <text x="30" y="74" font-size="54" font-family="Pretendard, sans-serif" font-weight="800" fill="#2563eb">%</text>
+    </g>
+    <g transform="translate(320 250)">
+      <path d="M0 26 Q0 0 26 0 H170 Q196 0 196 26 V110 Q196 136 170 136 H26 Q0 136 0 110 Z" fill="#fff7ed" stroke="#fb923c" stroke-width="8" opacity="0.96"/>
+      <circle cx="160" cy="28" r="10" fill="#fb923c"/>
+    </g>
+    <g transform="translate(170 380)">
+      <rect x="0" y="0" width="240" height="120" rx="30" fill="#eef2ff" stroke="#6366f1" stroke-width="8" opacity="0.96"/>
+      <circle cx="55" cy="60" r="18" fill="#6366f1"/>
+      <circle cx="95" cy="60" r="18" fill="#6366f1" opacity="0.75"/>
+      <circle cx="135" cy="60" r="18" fill="#6366f1" opacity="0.55"/>
+    </g>
+  </g>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        6: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky6" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#58ccff"/><stop offset="0.6" stop-color="#eefaff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green6" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky6)"/>
+  <path d="M0,640 C180,580 360,650 520,600 C660,565 760,595 800,580 L800,1000 L0,1000 Z" fill="url(#green6)"/>
+  <!-- Speech bubbles -->
+  <g filter="url(#shadow)" opacity="0.98">
+    <g transform="translate(120 240)">
+      <rect x="0" y="0" width="210" height="96" rx="26" fill="#ffffff"/>
+      <path d="M60 96 L85 96 L70 122 Z" fill="#ffffff"/>
+      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">시즌 준비</text>
+    </g>
+    <g transform="translate(420 290)">
+      <rect x="0" y="0" width="220" height="96" rx="26" fill="#ffffff"/>
+      <path d="M160 96 L185 96 L175 122 Z" fill="#ffffff"/>
+      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">숏게임…</text>
+    </g>
+    <g transform="translate(210 430)">
+      <rect x="0" y="0" width="260" height="96" rx="26" fill="#ffffff"/>
+      <path d="M115 96 L140 96 L128 122 Z" fill="#ffffff"/>
+      <text x="30" y="60" font-size="30" font-family="Pretendard, sans-serif" font-weight="800" fill="#111827">백돌이 탈출</text>
+    </g>
+  </g>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        7: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="bg7" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#52caff"/><stop offset="0.55" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="blur9"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#0b3a8a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg7)"/>
+  <!-- Blurred chat background -->
+  <g filter="url(#blur9)" opacity="0.55" transform="translate(80 170)">
+    <rect x="0" y="0" width="640" height="560" rx="40" fill="#ffffff"/>
+    <rect x="40" y="70" width="420" height="72" rx="28" fill="#dbeafe"/>
+    <rect x="200" y="170" width="400" height="72" rx="28" fill="#e5e7eb"/>
+    <rect x="40" y="270" width="470" height="72" rx="28" fill="#dbeafe"/>
+  </g>
+  <!-- Foreground phone -->
+  <g filter="url(#shadow)" transform="translate(240 560)" opacity="0.98">
+    <rect x="0" y="0" width="320" height="380" rx="52" fill="#111827"/>
+    <rect x="20" y="26" width="280" height="320" rx="34" fill="#f8fafc"/>
+    <circle cx="160" cy="355" r="16" fill="#374151"/>
+  </g>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`,
+
+        8: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="sky8" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#4fc6ff"/><stop offset="0.58" stop-color="#eaf9ff"/><stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="green8" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#c8f7e0"/><stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <radialGradient id="sun8" cx="70%" cy="16%" r="48%">
+      <stop offset="0" stop-color="#fff7c2" stop-opacity="0.95"/>
+      <stop offset="0.35" stop-color="#fff7c2" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fff7c2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky8)"/>
+  <circle cx="580" cy="170" r="240" fill="url(#sun8)"/>
+  <path d="M0,620 C200,560 360,620 520,575 C660,540 760,575 800,555 L800,1000 L0,1000 Z" fill="url(#green8)"/>
+  <!-- Hole + ball drop moment -->
+  <ellipse cx="420" cy="720" rx="180" ry="46" fill="#0f766e" opacity="0.12"/>
+  <circle cx="430" cy="708" r="20" fill="#111827" opacity="0.66"/>
+  <circle cx="430" cy="708" r="9" fill="#000000" opacity="0.66"/>
+  <circle cx="430" cy="642" r="18" fill="#ffffff"/>
+  <path d="M430 660 C430 680 430 690 430 700" stroke="#ffffff" stroke-width="5" stroke-dasharray="10 10" opacity="0.6"/>
+  <!-- Cheer confetti -->
+  <g opacity="0.6">
+    <circle cx="120" cy="260" r="8" fill="#2563eb"/>
+    <circle cx="160" cy="300" r="6" fill="#ef4444"/>
+    <circle cx="200" cy="250" r="7" fill="#f59e0b"/>
+    <circle cx="650" cy="280" r="8" fill="#22c55e"/>
+    <circle cx="680" cy="320" r="6" fill="#6366f1"/>
+  </g>
+  <rect x="28" y="28" width="744" height="944" rx="56" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+</svg>`
+      };
+
+      const svg = scenes[pageId] || scenes[1];
+      return h("img", { src: svgData(svg), className:"w-full h-full object-cover", alt:"fallback" });
+    }
+
+    function renderLines(lines) {
+      const children = [];
+      (lines || []).forEach((line, idx) => {
+        children.push(h("span", { key:`l-${idx}` }, line));
+        if (idx < lines.length - 1) children.push(h("br", { key:`br-${idx}` }));
+      });
+      return h("span", null, ...children);
     }
 
     function CardPage({ page, imageUrl, onPrev, onNext, index, total }) {
       const isFirst = index === 0;
       const isLast = index === total - 1;
 
-      const titleNode = h("div", { className:"leading-[1.2] tracking-tight break-keep" },
-        page.subtitle ? h("span", { className:"inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" }, page.subtitle) : null,
-        page.titleLines ? h("h1", { className:"mt-3 text-[1.35rem] md:text-3xl font-black text-gray-900" }, renderLines(page.titleLines)) : null,
-        page.highlightText ? h("div", { className:"mt-2" },
-          h("span", { className:`text-[1.65rem] md:text-4xl font-black ${page.highlightClass || ""}` }, page.highlightText)
-        ) : null,
-        page.emphasizeText ? h("div", { className:"mt-2" },
-          h("span", { className:`text-[1.45rem] md:text-3xl font-black ${page.emphasizeClass || ""}` }, page.emphasizeText)
-        ) : null
-      );
-
-      const descNode = page.descriptionLines
-        ? h("p", { className:"mt-3 text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/55 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" }, renderLines(page.descriptionLines))
-        : null;
-
-      const pointsNode = page.points && page.points.length
-        ? h("ul", { className:"space-y-3" },
-            ...page.points.map((pt, i) =>
-              h("li", { key:i, className:"bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start" },
-                h("span", { className:"mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" }, "✓"),
-                h("span", { className:"leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
-              )
-            )
-          )
-        : null;
-
       return h("div", { className:"relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col border border-gray-100" },
         h("div", { className:"absolute inset-0 w-full h-full" },
           imageUrl
             ? h("img", { src:imageUrl, alt:"scene", className:"w-full h-full object-cover" })
             : h(FallbackScene, { pageId: page.id }),
-          h("div", { className:"absolute inset-0 bg-gradient-to-b from-white/55 via-white/10 to-white/45" })
+          h("div", { className:"absolute inset-0 bg-gradient-to-b from-white/45 via-white/10 to-white/55" })
         ),
 
         h("div", { className:"relative z-10 h-full flex flex-col justify-between p-8 md:p-10" },
-          h("div", { className:"space-y-1" }, titleNode, descNode),
+          h("div", { className:"space-y-2" },
+            page.subtitle
+              ? h("span", { className:"inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" }, page.subtitle)
+              : null,
 
-          h("div", { className:"flex-1 flex flex-col justify-center py-4" }, pointsNode),
+            page.titleLines
+              ? h("h1", { className:"text-[1.35rem] md:text-3xl font-black text-gray-900 leading-[1.2] tracking-tight break-keep" }, renderLines(page.titleLines))
+              : null,
+
+            page.highlightText
+              ? h("div", { className:"mt-1" },
+                  h("span", { className:`text-[1.65rem] md:text-4xl font-black ${page.highlightClass || ""}` }, page.highlightText)
+                )
+              : null,
+
+            page.emphasizeText
+              ? h("div", { className:"mt-1" },
+                  h("span", { className:`text-[1.45rem] md:text-3xl font-black ${page.emphasizeClass || ""}` }, page.emphasizeText)
+                )
+              : null,
+
+            page.descriptionLines
+              ? h("p", { className:"text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/60 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" },
+                  renderLines(page.descriptionLines)
+                )
+              : null
+          ),
+
+          h("div", { className:"flex-1 flex flex-col justify-center py-4" },
+            page.points && page.points.length
+              ? h("ul", { className:"space-y-3" },
+                  ...page.points.map((pt, i) =>
+                    h("li", { key:i, className:"bg-white/88 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start" },
+                      h("span", { className:"mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" }, "✓"),
+                      h("span", { className:"leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
+                    )
+                  )
+                )
+              : null
+          ),
 
           h("div", { className:"space-y-3" },
             h("div", { className:"flex items-center justify-between" },
               h("button", {
                 onClick:onPrev, disabled:isFirst,
                 className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
-                  isFirst ? "bg-white/40 text-gray-300 border-gray-200" : "bg-white/85 text-gray-700 border-gray-200 hover:bg-white"
+                  isFirst ? "bg-white/45 text-gray-300 border-gray-200" : "bg-white/90 text-gray-700 border-gray-200 hover:bg-white"
                 }`
               }, "◀"),
-              h("div", { className:"text-[11px] font-black text-gray-500 bg-white/60 backdrop-blur px-3 py-1.5 rounded-full border border-gray-100" }, `${index+1} / ${total}`),
+              h("div", { className:"text-[11px] font-black text-gray-500 bg-white/70 backdrop-blur px-3 py-1.5 rounded-full border border-gray-100" },
+                `${index+1} / ${total}`
+              ),
               h("button", {
                 onClick:onNext, disabled:isLast,
                 className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
-                  isLast ? "bg-white/40 text-gray-300 border-gray-200" : "bg-white/85 text-gray-700 border-gray-200 hover:bg-white"
+                  isLast ? "bg-white/45 text-gray-300 border-gray-200" : "bg-white/90 text-gray-700 border-gray-200 hover:bg-white"
                 }`
               }, "▶")
             ),
             h("div", { className:"flex justify-center" },
-              h("div", { className:"text-[9px] text-gray-400 font-black bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase" },
+              h("div", { className:"text-[9px] text-gray-400 font-black bg-white/65 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase" },
                 "SEUSEUNGNIM X SEO SU YEON"
               )
             )
           )
         )
       );
-    }
-
-    function renderLines(lines) {
-      const children = [];
-      lines.forEach((line, idx) => {
-        children.push(h("span", { key:`l-${idx}` }, line));
-        if (idx < lines.length - 1) children.push(h("br", { key:`br-${idx}` }));
-      });
-      return h("span", null, ...children);
     }
 
     function App(){
