@@ -5,27 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>스승님 X 서수연 프로 숏게임 클래스</title>
 
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Pretendard -->
   <link rel="stylesheet" as="style" crossorigin
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 
   <style>
-    body {
-      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
-        "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
-      background: #f8fafc;
-      overflow-x: hidden;
+    body{
+      font-family:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+        "Helvetica Neue","Segoe UI","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+      background:#f8fafc; overflow-x:hidden;
     }
-    .aspect-4-5 { aspect-ratio: 4 / 5; }
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-      100% { transform: translateY(0px); }
-    }
-    .floating { animation: float 3s ease-in-out infinite; }
+    .aspect-4-5{ aspect-ratio:4/5; }
+    .tap{ -webkit-tap-highlight-color: transparent; }
   </style>
 
   <script type="importmap">
@@ -38,61 +29,47 @@
     }
   </script>
 </head>
-
 <body>
   <div id="root"></div>
 
   <script type="module">
-    import React, { useEffect, useMemo, useCallback, useState } from "react";
+    import React, { useCallback, useEffect, useMemo, useState } from "react";
     import { createRoot } from "react-dom/client";
     import { GoogleGenAI } from "@google/genai";
-
     const h = React.createElement;
 
-    /**
-     * =========================================================
-     * 0) 전역 프롬프트(너가 준 긴 조건을 "매 페이지에 강제 적용")
-     * =========================================================
-     */
     const GLOBAL_PROMPT_PREFIX = `
-목표: ‘스승님 X 서수연 프로 숏게임 클래스’ 홍보용, 모바일 기준 8페이지 카드형 랜딩 디자인.
-각 페이지는 카드 형태이며 모든 요소(텍스트+캐릭터+버튼)는 카드 SAFE AREA 안에 배치.
-화면이 잘리지 않도록 상하좌우 최소 8% 여백 유지.
-페이지 하단에 ◀ ▶ 형태의 페이지 넘김 화살표 UI를 "시각적으로" 포함(실제 인터랙션 구현 불필요).
-CTA 버튼은 카드 하단 중앙.
+- Output: 4:5 vertical card scene image for mobile.
+- Must keep safe-area padding 8% on all sides. No cropping.
+- Include bottom navigation UI visually “◀ 1/8 ▶” and CTA button shape at bottom center (visual only).
+- Korean text only, Pretendard-like, readable, not oversized.
+- No real photos. No app mockups. No screenshots.
+- Realistic 3D humans only. No cute/chibi. No Pixar/Disney.
+- Coach: beautiful Korean female golf pro, slim athletic, cap, golfwear, confident coach vibe, centered.
+- Students: mixed amateurs, slightly awkward posture, relatable.
+- Golf-only scenes: green/putting/bunker/approach/outdoor course. No office, no plain single-color.
+- Each page must be a specific SCENE showing emotion + action + flow.
+- Benefit page: coupon/%/ticket/coin-style benefit icons (not cash).
+- Apply page: blurred chat-style background with 2–3 bubbles (generic, not screenshot).
+- Do not merge discounts. Keep: “레슨 15% 할인 + 2인 동반 시 연습장비 50% 지원(최대 2만원/조건별)”.
+    `.trim();
 
-전체 비주얼: 화사한 블루 계열 골프 시즌 느낌, 밝고 시원함. 베이지/화이트는 보조톤.
-
-캐릭터(중요): 귀엽고 동글동글한 캐릭터 금지.
-현실적인 3D 사람 스타일(실제 비율, 자연스러운 얼굴), 광고용 리얼 3D.
-Pixar/Disney/치비 느낌 절대 금지.
-서수연 프로: 예쁜 한국인 여자 골프프로 느낌(실사 사진 금지), 슬림 체형, 실제 골프웨어(캡모자 등), 자신감 있는 표정, 코치 포지션 명확.
-수강생: 남녀 혼합, 아마추어 골퍼, 살짝 어설픈 자세.
-
-배경: 골프 관련 연상 요소가 느껴지되, 과한 랜드스케이프/나무/하늘/원경은 최소화.
-텍스트 가독성 우선. Pretendard 스타일 산세리프, 과도하게 큰 글씨 금지.
-한 줄 최대 12~14자 내에서 자연스럽게 줄바꿈, 서브 텍스트는 메인 대비 70% 크기.
-
-필수: 모든 텍스트 한국어, 실사 금지, 앱 목업 금지, 퍼센트 합산 금지.
-‘레슨 15% + 2인 동반 시 연습장비 50% 지원(최대 2만원/조건별)’ 구조 유지.
-`;
-
-    /**
-     * =========================
-     * 1) 카드 데이터 (8페이지)
-     * - '배경이 비는' 상황을 대비해 페이지 자체는 텍스트+패턴 배경만으로도 예쁘게 보이게 구성
-     * =========================
-     */
-    const CARD_PAGES = [
+    const PAGES = [
       {
         id: 1,
         subtitle: "2026 시즌 대비",
         titleLines: ["숏게임만 잡아도"],
         highlightText: "10타는 줄일 수 있습니다",
-        highlightClass: "text-blue-600 font-extrabold",
+        highlightClass: "text-blue-600",
         descriptionLines: ["스승님 X 서수연 프로"],
-        backgroundImagePrompt:
-          "Realistic 3D human render. A beautiful Korean female golf pro coach in premium sky-blue golf wear smiling confidently. Minimal clean light-blue gradient background. Add small golf elements only (golf ball, hole cup icon). Ensure all subjects centered and fully inside frame. Add bottom navigation arrows ◀ ▶ as UI elements within the card. 4:5."
+        prompt: `
+[PAGE 1 — 시즌 시작(후킹)]
+푸른 하늘, 넓은 그린, 따뜻한 햇살, 멀리 작은 골프 카트, 살짝 렌즈 플레어.
+중앙: 예쁜 한국인 여자 골프프로(코치) 자신감 있는 표정, 프리미엄 골프웨어.
+옆: 1-2명 아마추어 골퍼, 설레는 표정.
+감정: “아… 시즌 시작이구나”.
+텍스트는 한국어, 안전영역 내. 하단에 ◀ 1/8 ▶ 과 CTA 버튼 형태 포함.
+        `.trim()
       },
       {
         id: 2,
@@ -101,276 +78,223 @@ Pixar/Disney/치비 느낌 절대 금지.
         emphasizeText: "너무 열받지 않으세요?",
         emphasizeClass: "text-red-500",
         descriptionLines: ["연습장에서는 프로,", "필드에서는 백돌이."],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Amateur golfer looks frustrated near a hole cup icon; coach (beautiful Korean female golf pro) explains calmly. Minimal light-blue gradient background with small golf elements only. Add ◀ ▶ navigation UI inside card bottom. 4:5."
+        prompt: `
+[PAGE 2 — 분노 + 아쉬움(문제 공감)]
+그린 주변. 홀컵 가까이에 멈춘 공(아쉬운 근접 미스).
+퍼터 들고 머리 긁적이는 아마추어(분노+아쉬움 표정).
+뒤쪽은 흐릿한 스코어보드(더블보기 느낌) — 과한 디테일 없이 블러.
+코치(예쁜 한국인 여자 프로)는 공감/진정시키며 설명하는 포즈.
+감정: “아 씨… 또 여기서 무너졌네”.
+하단 ◀ 2/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 3,
         subtitle: "어프로치 · 벙커 · 퍼팅",
         titleLines: ["서수연 프로", "숏게임 클래스"],
         descriptionLines: ["실전만 집중하는 2시간"],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Korean female golf pro demonstrates wedge posture. Minimal light-blue gradient background with small golf ball and target marker icon. Add ◀ ▶ UI bottom. 4:5."
+        prompt: `
+[PAGE 3 — 솔루션(프로 등장)]
+숏게임 연습존. 타겟 매트, 어프로치 거리 마커, 작은 깃발/콘.
+코치(예쁜 한국인 여자 프로) 뒤에 은은한 라이트(히어로 느낌).
+코치는 웨지 자세 데모, 아마추어는 집중해서 보는 장면.
+감정: “아 여기서 배우는구나”.
+하단 ◀ 3/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 4,
         titleLines: ["클래스 핵심 포인트"],
-        points: ["이론 최소화, 실전 위주", "현장 실전 감각 집중", "소수정예 단독 진행", "날짜 직접 선택 가능"],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Minimal training board with swing path arrows; pro points at it. Light-blue gradient background, small golf icons. Add ◀ ▶ UI bottom. 4:5."
+        points: ["✔ 이론 최소", "✔ 실전 집중", "✔ 소수정예 단독", "✔ 날짜 직접 선택"],
+        prompt: `
+[PAGE 4 — 체계적인 코칭(특징)]
+이동식 작은 화이트보드, 궤적 화살표 그래픽.
+공의 궤적 라인 오버레이(가벼운 그래픽).
+코치가 보드 가리키며 설명, 아마추어는 고개 끄덕.
+감정: “아 그냥 치는게 아니네”.
+하단 ◀ 4/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 5,
-        titleLines: ["혜택 안내 (1~3)"],
-        points: ["만족도 100%, 불만족 시 환불", "프라이빗 소수 특별 실전 레슨", "연인·가족과 함께 원하는 날짜 참여"],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Premium coupon/ticket icons floating subtly. Pro stands centered. Light-blue clean background. Add ◀ ▶ UI bottom. 4:5."
+        titleLines: ["혜택 폭발"],
+        points: [
+          "숏게임 레슨 15% 할인",
+          "+ 2인 동반 시 연습장비 50% 지원",
+          "(연습장비 최대 2만원 / 조건별 적용)"
+        ],
+        prompt: `
+[PAGE 5 — 혜택 폭발(핵심)]
+혜택 아이콘 연출: 티켓 쿠폰, % 아이콘, 바우처 태그, 코인/포인트 아이콘이 가볍게 떨어지는 느낌.
+실제 돈 비주얼 금지(현금/지폐/동전 사실적 표현 X) — 그래픽 아이콘만.
+배경에 연습장 입장 게이트가 아주 흐릿하게 보임.
+코치와 아마추어는 “오 혜택 괜찮은데?” 표정.
+할인 합산 금지. 문구는 그대로 유지.
+하단 ◀ 5/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 6,
-        titleLines: ["검증된 수강 데이터"],
-        points: ["1월 숏게임 레슨 21건 진행", "1:1 담당자 맞춤 절차 및 상담", "리드폼 제출 → 날짜 조율 → 레슨"],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Group of satisfied amateur golfers with small checkmark speech bubbles. Pro coach centered. Light-blue background. Add ◀ ▶ UI bottom. 4:5."
+        titleLines: ["이런 분께 추천합니다"],
+        points: [
+          "• 시즌 첫 라운딩 준비",
+          "• 숏게임 때문에 점수 안 줄어드는 분",
+          "• 연습장과 필드 차이 느끼는 분",
+          "• 친구와 같이 배우고 싶은 분"
+        ],
+        prompt: `
+[PAGE 6 — 내 얘기네(추천 대상)]
+서로 다른 3~4명의 아마추어 골퍼(남녀 혼합), 각자 다른 표정/상황.
+말풍선 키워드: “시즌 준비”, “숏게임…”, “백돌이 탈출”.
+코치는 뒤/중앙에서 자신감 있게 ‘해결해줄게’ 포지션.
+감정: “어 나잖아”.
+하단 ◀ 6/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 7,
-        titleLines: ["간편한 신청 방법"],
+        titleLines: ["신청 방법"],
         descriptionLines: [
           "하단 [신청하기] 클릭 →",
           "카카오톡 채널 채팅 연결",
           "",
-          "원하시는 날짜를 말씀주시면",
-          "레슨 일정을 잡아드립니다."
+          "원하시는 날짜 말씀 주시면",
+          "레슨 일정 바로 잡아드립니다."
         ],
-        backgroundImagePrompt:
-          "Realistic 3D human render. Hands holding a phone with blurred KakaoTalk chat bubbles (no brand UI mockup details, just generic blurred bubbles). Pro is in background smiling. Clean light-blue gradient. Add ◀ ▶ UI bottom. 4:5."
+        prompt: `
+[PAGE 7 — 지금 행동(전환)]
+흐릿한 채팅 UI 배경(카카오톡 느낌 ‘스타일’만, 스크린샷/목업 금지).
+말풍선 2~3개(한국어):
+“숏게임 클래스 문의드려요”
+“날짜 언제 가능할까요?”
+(선택) “2인도 가능할까요?”
+전경: 캐릭터가 휴대폰을 터치하는 액션.
+감정: “아 이렇게 신청하는구나”.
+하단 ◀ 7/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       },
       {
         id: 8,
         subtitle: "숏게임이 바뀌면 골프가 달라집니다.",
         titleLines: ["지금 바로 신청하세요"],
         hasCta: true,
-        backgroundImagePrompt:
-          "Realistic 3D render. Golf ball rolling into hole cup icon (minimal). Clean light-blue gradient background. Add ◀ ▶ UI bottom. 4:5."
+        prompt: `
+[PAGE 8 — 결과 상상(CTA)]
+홀컵에 공이 들어가는 순간(다이내믹), 햇살, 골프장 파노라마 느낌.
+아마추어들이 환호(작은 그룹), 코치는 뿌듯한 미소.
+감정: “나도 저렇게 되고 싶다”.
+버튼 텍스트: “숏게임 클래스 신청하기”
+하단 ◀ 8/8 ▶ + CTA 버튼 형태. 안전영역 8%.
+        `.trim()
       }
     ];
 
-    /**
-     * =========================
-     * 2) Gemini 이미지 생성 (옵션)
-     * - 브라우저에선 process.env 없음 → localStorage 키 사용
-     * - 키 없거나 quota 초과면 null 반환, 패턴 배경으로 표시
-     * =========================
-     */
-    async function generateCardImage(apiKey, prompt) {
-      if (!apiKey) return null;
+    const CTA_URL = "http://pf.kakao.com/_kxawRn/chat";
 
+    async function genImage(apiKey, pagePrompt) {
+      if (!apiKey) return null;
       try {
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: "gemini-2.5-flash-image",
-          contents: { parts: [{ text: (GLOBAL_PROMPT_PREFIX + "\n\n" + prompt).trim() }] },
+          contents: { parts: [{ text: (GLOBAL_PROMPT_PREFIX + "\n\n" + pagePrompt).trim() }] },
           config: { imageConfig: { aspectRatio: "4:5" } }
         });
-
-        const candidate = response?.candidates?.[0];
-        const parts = candidate?.content?.parts || [];
-        for (const part of parts) {
-          if (part.inlineData) {
-            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        const parts = response?.candidates?.[0]?.content?.parts || [];
+        for (const p of parts) {
+          if (p.inlineData) {
+            return `data:${p.inlineData.mimeType};base64,${p.inlineData.data}`;
           }
         }
         return null;
       } catch (e) {
-        console.error("Gemini Image Generation Error:", e);
+        console.error(e);
         return null;
       }
     }
 
-    /**
-     * =========================
-     * 3) 유틸
-     * =========================
-     */
-    function renderLines(lines) {
-      if (!lines || !lines.length) return null;
-      const children = [];
-      lines.forEach((line, idx) => {
-        children.push(h("span", { key: `l-${idx}` }, line));
-        if (idx < lines.length - 1) children.push(h("br", { key: `br-${idx}` }));
-      });
-      return h("span", null, ...children);
-    }
-
-    /**
-     * =========================================
-     * 4) 배경이 비어도 예쁘게 보이게: 패턴 배경
-     * =========================================
-     */
-    function PatternFallbackBackground() {
-      return h(
-        "div",
-        { className: "w-full h-full bg-gradient-to-b from-white to-blue-50 relative" },
-
-        // subtle dot pattern
-        h("div", { className: "absolute inset-0 opacity-[0.18]" },
-          h("div", {
-            className: "w-full h-full",
-            style: {
-              backgroundImage: `
-                radial-gradient(circle at 20% 20%, rgba(37, 99, 235, .25) 0 2px, transparent 3px),
-                radial-gradient(circle at 70% 35%, rgba(37, 99, 235, .22) 0 2px, transparent 3px),
-                radial-gradient(circle at 40% 75%, rgba(37, 99, 235, .18) 0 2px, transparent 3px)
-              `,
-              backgroundSize: "80px 80px",
-              backgroundPosition: "0 0, 20px 10px, 10px 30px"
-            }
-          })
+    function FallbackScene({ pageId }) {
+      return h("div", { className:"w-full h-full relative bg-gradient-to-b from-sky-200 via-sky-100 to-emerald-100" },
+        h("div", { className:"absolute inset-0 opacity-[0.25]" },
+          h("div", { className:"w-full h-full", style:{
+            backgroundImage: `
+              radial-gradient(circle at 20% 20%, rgba(37,99,235,.28) 0 2px, transparent 3px),
+              radial-gradient(circle at 70% 35%, rgba(37,99,235,.22) 0 2px, transparent 3px),
+              radial-gradient(circle at 40% 75%, rgba(16,185,129,.18) 0 2px, transparent 3px)
+            `,
+            backgroundSize:"80px 80px",
+            backgroundPosition:"0 0, 18px 12px, 10px 30px"
+          }})
         ),
-
-        // floating golf emojis (lightweight)
-        h("div", { className: "absolute inset-0 flex items-center justify-center" },
-    +     h("div", { className: "flex gap-4 text-3xl opacity-80" }, "⛳️", "🏌️‍♀️", "🏌️", "🏌️‍♂️")
+        h("div", { className:"absolute bottom-0 left-0 right-0 h-[38%] opacity-90 bg-gradient-to-t from-emerald-200 to-transparent" }),
+        h("div", { className:"absolute top-5 left-5 text-xs font-black text-white/90 drop-shadow" }, `SCENE ${pageId}`),
+        h("div", { className:"absolute inset-0 flex items-center justify-center" },
+          h("div", { className:"flex gap-4 text-4xl opacity-90" }, "⛳️","🏌️‍♀️","🏌️","🏌️‍♂️")
         )
       );
     }
 
-    /**
-     * =========================
-     * 5) CardPage (단일 페이지 + 하단 화살표 UI 실제 동작)
-     * =========================
-     */
-    function CardPage({ data, imageUrl, onPrev, onNext, pageIndex, pageTotal }) {
-      const isFirst = pageIndex === 0;
-      const isLast = pageIndex === pageTotal - 1;
+    function CardPage({ page, imageUrl, onPrev, onNext, index, total }) {
+      const isFirst = index === 0;
+      const isLast = index === total - 1;
 
-      return h(
-        "div",
-        { className: "relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col border border-gray-100" },
+      const titleNode = h("div", { className:"leading-[1.2] tracking-tight break-keep" },
+        page.subtitle ? h("span", { className:"inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" }, page.subtitle) : null,
+        page.titleLines ? h("h1", { className:"mt-3 text-[1.35rem] md:text-3xl font-black text-gray-900" }, renderLines(page.titleLines)) : null,
+        page.highlightText ? h("div", { className:"mt-2" },
+          h("span", { className:`text-[1.65rem] md:text-4xl font-black ${page.highlightClass || ""}` }, page.highlightText)
+        ) : null,
+        page.emphasizeText ? h("div", { className:"mt-2" },
+          h("span", { className:`text-[1.45rem] md:text-3xl font-black ${page.emphasizeClass || ""}` }, page.emphasizeText)
+        ) : null
+      );
 
-        // Background
-        h(
-          "div",
-          { className: "absolute inset-0 w-full h-full" },
+      const descNode = page.descriptionLines
+        ? h("p", { className:"mt-3 text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/55 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" }, renderLines(page.descriptionLines))
+        : null;
+
+      const pointsNode = page.points && page.points.length
+        ? h("ul", { className:"space-y-3" },
+            ...page.points.map((pt, i) =>
+              h("li", { key:i, className:"bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start" },
+                h("span", { className:"mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" }, "✓"),
+                h("span", { className:"leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
+              )
+            )
+          )
+        : null;
+
+      return h("div", { className:"relative w-full aspect-4-5 overflow-hidden rounded-[2.5rem] shadow-xl bg-white flex flex-col border border-gray-100" },
+        h("div", { className:"absolute inset-0 w-full h-full" },
           imageUrl
-            ? h("img", { src: imageUrl, alt: "bg", className: "w-full h-full object-cover animate-in fade-in duration-700" })
-            : h(PatternFallbackBackground, null),
-          // legibility overlay (very light)
-          h("div", { className: "absolute inset-0 bg-gradient-to-b from-white/70 via-white/10 to-white/35" })
+            ? h("img", { src:imageUrl, alt:"scene", className:"w-full h-full object-cover" })
+            : h(FallbackScene, { pageId: page.id }),
+          h("div", { className:"absolute inset-0 bg-gradient-to-b from-white/55 via-white/10 to-white/45" })
         ),
 
-        // Content
-        h(
-          "div",
-          { className: "relative z-10 p-8 md:p-10 h-full flex flex-col justify-between" },
+        h("div", { className:"relative z-10 h-full flex flex-col justify-between p-8 md:p-10" },
+          h("div", { className:"space-y-1" }, titleNode, descNode),
 
-          // Header
-          h(
-            "div",
-            { className: "space-y-3" },
-            data.subtitle
-              ? h(
-                  "span",
-                  { className: "inline-block px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-blue-100" },
-                  data.subtitle
-                )
-              : null,
+          h("div", { className:"flex-1 flex flex-col justify-center py-4" }, pointsNode),
 
-            h(
-              "div",
-              { className: "leading-[1.2] tracking-tight break-keep" },
-              data.titleLines
-                ? h("h1", { className: "text-[1.45rem] md:text-3xl font-black text-gray-900" }, renderLines(data.titleLines))
-                : null,
-
-              data.highlightText
-                ? h("div", { className: "mt-2" },
-                    h("span", { className: `text-[1.7rem] md:text-4xl ${data.highlightClass || ""}` }, data.highlightText)
-                  )
-                : null,
-
-              data.emphasizeText
-                ? h("div", { className: "mt-2" },
-                    h("span", { className: `text-[1.55rem] md:text-3xl font-black ${data.emphasizeClass || ""}` }, data.emphasizeText)
-                  )
-                : null
-            ),
-
-            data.descriptionLines
-              ? h(
-                  "p",
-                  { className: "text-gray-700 font-bold text-[13px] md:text-base leading-[1.6] bg-white/55 backdrop-blur-sm inline-block px-3 py-2 rounded-xl break-keep" },
-                  renderLines(data.descriptionLines)
-                )
-              : null
-          ),
-
-          // Main content
-          h(
-            "div",
-            { className: "flex-1 flex flex-col justify-center py-4" },
-            Array.isArray(data.points) && data.points.length
-              ? h(
-                  "ul",
-                  { className: "space-y-3" },
-                  ...data.points.map((pt, i) =>
-                    h(
-                      "li",
-                      {
-                        key: i,
-                        className:
-                          "bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm font-extrabold text-gray-800 flex items-start"
-                      },
-                      h(
-                        "span",
-                        { className: "mr-3 mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-full text-[9px] font-black" },
-                        "✓"
-                      ),
-                      h("span", { className: "leading-snug text-[14px] md:text-[15px] break-keep" }, pt)
-                    )
-                  )
-                )
-              : null
-          ),
-
-          // Bottom: arrows + page counter + branding
-          h(
-            "div",
-            { className: "space-y-3" },
-
-            // Navigation arrows (실제 동작)
-            h("div", { className: "flex items-center justify-between" },
+          h("div", { className:"space-y-3" },
+            h("div", { className:"flex items-center justify-between" },
               h("button", {
-                onClick: onPrev,
-                disabled: isFirst,
-                className: `px-4 py-2 rounded-full font-black text-sm border transition ${
+                onClick:onPrev, disabled:isFirst,
+                className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
                   isFirst ? "bg-white/40 text-gray-300 border-gray-200" : "bg-white/85 text-gray-700 border-gray-200 hover:bg-white"
                 }`
               }, "◀"),
-
-              h("div", { className: "text-[11px] font-black text-gray-500 bg-white/60 backdrop-blur px-3 py-1.5 rounded-full border border-gray-100" },
-                `${pageIndex + 1} / ${pageTotal}`
-              ),
-
+              h("div", { className:"text-[11px] font-black text-gray-500 bg-white/60 backdrop-blur px-3 py-1.5 rounded-full border border-gray-100" }, `${index+1} / ${total}`),
               h("button", {
-                onClick: onNext,
-                disabled: isLast,
-                className: `px-4 py-2 rounded-full font-black text-sm border transition ${
+                onClick:onNext, disabled:isLast,
+                className:`tap px-4 py-2 rounded-full font-black text-sm border transition ${
                   isLast ? "bg-white/40 text-gray-300 border-gray-200" : "bg-white/85 text-gray-700 border-gray-200 hover:bg-white"
                 }`
               }, "▶")
             ),
-
-            h(
-              "div",
-              { className: "flex justify-center" },
-              h(
-                "div",
-                {
-                  className:
-                    "text-[9px] text-gray-400 font-black bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase"
-                },
+            h("div", { className:"flex justify-center" },
+              h("div", { className:"text-[9px] text-gray-400 font-black bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 tracking-widest uppercase" },
                 "SEUSEUNGNIM X SEO SU YEON"
               )
             )
@@ -379,121 +303,84 @@ Pixar/Disney/치비 느낌 절대 금지.
       );
     }
 
-    /**
-     * =========================
-     * 6) App
-     * - Generator 설정 UI 제거됨
-     * - 배경 이미지는 "옵션": localStorage에 GEMINI_API_KEY가 있으면 생성 시도
-     * - 없으면 패턴 배경으로만 진행
-     * - 페이지는 '한 장만' 보여주고 화살표로 이동
-     * =========================
-     */
-    function App() {
+    function renderLines(lines) {
+      const children = [];
+      lines.forEach((line, idx) => {
+        children.push(h("span", { key:`l-${idx}` }, line));
+        if (idx < lines.length - 1) children.push(h("br", { key:`br-${idx}` }));
+      });
+      return h("span", null, ...children);
+    }
+
+    function App(){
       const apiKey = useMemo(() => localStorage.getItem("GEMINI_API_KEY") || "", []);
-      const [images, setImages] = useState({});
       const [activeIndex, setActiveIndex] = useState(0);
+      const [images, setImages] = useState({});
 
-      const activePage = CARD_PAGES[activeIndex];
+      const page = PAGES[activeIndex];
 
-      // 페이지별 이미지 생성(키 있을 때만)
       useEffect(() => {
         let mounted = true;
-
         (async () => {
-          if (!apiKey) return; // 키 없으면 패턴 배경
-          // 이미 생성된 페이지는 다시 생성하지 않음
-          if (images[activePage.id]) return;
-
-          const url = await generateCardImage(apiKey, activePage.backgroundImagePrompt);
+          if (!apiKey) return;
+          if (images[page.id]) return;
+          const url = await genImage(apiKey, page.prompt);
           if (!mounted) return;
-
-          if (url) {
-            setImages(prev => ({ ...prev, [activePage.id]: url }));
-          }
+          if (url) setImages(prev => ({ ...prev, [page.id]: url }));
         })();
-
         return () => { mounted = false; };
-      }, [apiKey, activePage.id, activePage.backgroundImagePrompt, images]);
+      }, [apiKey, page.id, page.prompt, images]);
 
-      const handleApply = useCallback(() => {
-        window.open("http://pf.kakao.com/_kxawRn/chat", "_blank");
-      }, []);
+      const goPrev = useCallback(() => setActiveIndex(i => Math.max(0, i-1)), []);
+      const goNext = useCallback(() => setActiveIndex(i => Math.min(PAGES.length-1, i+1)), []);
+      const handleApply = useCallback(() => window.open(CTA_URL, "_blank"), []);
 
-      const goPrev = useCallback(() => {
-        setActiveIndex(i => Math.max(0, i - 1));
-      }, []);
-
-      const goNext = useCallback(() => {
-        setActiveIndex(i => Math.min(CARD_PAGES.length - 1, i + 1));
-      }, []);
-
-      return h(
-        "div",
-        { className: "min-h-screen bg-slate-50 flex flex-col items-center pb-28" },
-        h(
-          "div",
-          { className: "w-full max-w-md mx-auto flex flex-col gap-6 p-4" },
-
-          // Banner Header
-          h(
-            "div",
-            { className: "bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex items-center justify-between" },
-            h(
-              "div",
-              { className: "flex flex-col" },
-              h("span", { className: "text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Premium Lesson"),
-              h("span", { className: "text-lg font-black text-gray-900" }, "서수연 프로의 숏게임")
+      return h("div", { className:"min-h-screen bg-slate-50 flex flex-col items-center pb-28" },
+        h("div", { className:"w-full max-w-md mx-auto flex flex-col gap-6 p-4" },
+          h("div", { className:"bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex items-center justify-between" },
+            h("div", { className:"flex flex-col" },
+              h("span", { className:"text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Premium Lesson"),
+              h("span", { className:"text-lg font-black text-gray-900" }, "서수연 프로의 숏게임")
             ),
-            h("div", { className: "w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" }, h("span", { className: "text-xl" }, "🏌️‍♀️"))
+            h("div", { className:"w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" },
+              h("span", { className:"text-xl" }, "🏌️‍♀️")
+            )
           ),
 
-          // Single Page (with arrows)
           h(CardPage, {
-            data: activePage,
-            imageUrl: images[activePage.id],
+            page,
+            imageUrl: images[page.id],
             onPrev: goPrev,
             onNext: goNext,
-            pageIndex: activeIndex,
-            pageTotal: CARD_PAGES.length
+            index: activeIndex,
+            total: PAGES.length
           }),
 
-          // CTA at end
-          h(
-            "div",
-            { className: "pt-2" },
-            h(
-              "button",
-              {
-                onClick: handleApply,
-                className:
-                  "w-full py-6 bg-[#FEE500] text-[#3c1e1e] font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 hover:bg-[#FDD800] active:scale-[0.97] transition-all"
-              },
+          h("div", { className:"pt-2" },
+            h("button", {
+              onClick: handleApply,
+              className:"tap w-full py-6 bg-[#FEE500] text-[#3c1e1e] font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 hover:bg-[#FDD800] active:scale-[0.97] transition-all"
+            },
               h("img", {
-                src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
-                className: "w-8 h-8",
-                alt: "kakao"
+                src:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+                className:"w-8 h-8",
+                alt:"kakao"
               }),
               "숏게임 클래스 신청하기"
             ),
-            h("p", { className: "mt-4 text-center text-gray-400 text-xs font-medium" }, "© 2026 SEUSEUNGNIM X PRO SEO SU YEON")
+            h("p", { className:"mt-4 text-center text-gray-400 text-xs font-medium" }, "© 2026 SEUSEUNGNIM X PRO SEO SU YEON")
           )
         ),
 
-        // Fixed Floating CTA
-        h(
-          "div",
-          { className: "fixed bottom-0 left-0 right-0 p-5 max-w-md mx-auto z-30" },
-          h(
-            "button",
-            {
-              onClick: handleApply,
-              className:
-                "w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-lg rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-4 border-white",
-            },
+        h("div", { className:"fixed bottom-0 left-0 right-0 p-5 max-w-md mx-auto z-30" },
+          h("button", {
+            onClick: handleApply,
+            className:"tap w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-lg rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-4 border-white"
+          },
             h("img", {
-              src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
-              className: "w-6 h-6",
-              alt: "kakao"
+              src:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+              className:"w-6 h-6",
+              alt:"kakao"
             }),
             "지금 바로 문의하기"
           )
@@ -501,9 +388,7 @@ Pixar/Disney/치비 느낌 절대 금지.
       );
     }
 
-    // Mount
     const rootEl = document.getElementById("root");
-    if (!rootEl) throw new Error("Root element not found");
     createRoot(rootEl).render(h(React.StrictMode, null, h(App)));
   </script>
 </body>
