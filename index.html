@@ -395,55 +395,6 @@
           "div",
           { className: "w-full max-w-md mx-auto flex flex-col gap-4 p-4" },
 
-          // Admin/Controls
-          h(
-            "div",
-            { className: "bg-white rounded-[1.75rem] p-5 shadow-sm border border-gray-100 space-y-3" },
-            h("div", { className: "flex items-center justify-between" },
-              h("div", { className: "flex flex-col" },
-                h("span", { className: "text-[10px] font-black text-blue-600 tracking-widest uppercase" }, "Generator"),
-                h("span", { className: "text-base font-black text-gray-900" }, "Gemini 이미지 생성 설정")
-              ),
-              h("div", { className: "w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center" },
-                h("span", { className: "text-xl" }, "🧩")
-              )
-            ),
-
-            h("div", { className: "space-y-2" },
-              h("label", { className: "text-[11px] font-black text-gray-500 tracking-wider uppercase" }, "Gemini API Key (선택)"),
-              h("input", {
-                value: apiKey,
-                onChange: (e) => setApiKey(e.target.value),
-                placeholder: "여기에 API Key 입력 (없으면 배경은 그라데이션으로 표시)",
-                className: "w-full px-4 py-3 rounded-2xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200 font-bold text-sm"
-              }),
-              h("div", { className: "flex gap-2" },
-                h("button", {
-                  onClick: saveKey,
-                  className: "flex-1 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 transition"
-                }, "키 저장 & 재생성"),
-                h("button", {
-                  onClick: clearKey,
-                  className: "py-3 px-4 rounded-2xl bg-gray-100 text-gray-700 font-black text-sm hover:bg-gray-200 transition"
-                }, "키 삭제")
-              )
-            ),
-
-            h("div", { className: "flex items-center justify-between pt-1" },
-              h("div", { className: "text-xs font-bold text-gray-500" }, "배경 이미지 생성 끄기 (용량/쿼터 절약)"),
-              h("button", {
-                onClick: () => setDisableImages((v) => !v),
-                className: `px-4 py-2 rounded-full font-black text-xs border transition ${
-                  disableImages ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200"
-                }`
-              }, disableImages ? "ON" : "OFF")
-            ),
-
-            state.isGenerating
-              ? h("div", { className: "text-xs font-black text-blue-600" }, `이미지 생성 중... ${Math.round(state.progress)}%`)
-              : null
-          ),
-
           // Banner Card Header
           h(
             "div",
@@ -530,3 +481,4 @@
   </script>
 </body>
 </html>
+
