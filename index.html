@@ -129,7 +129,7 @@
           { width: 80, height: 80, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
           React.createElement("circle", { cx: 12, cy: 12, r: 9, fill: "#fbbf24" }),
           React.createElement("circle", { cx: 12, cy: 12, r: 7, stroke: "#d97706", strokeWidth: 2 }),
-          React.createElement("text", { x: 12, y: 16, fontSize: 10, fontWeight: "black", textAnchor: "middle", fill: "#d97706" }, "%")
+          React.createElement("text", { x: 12, y: 16, fontSize: 8, fontWeight: "black", textAnchor: "middle", fill: "#d97706" }, "%")
         );
 
       const Location3D = () =>
@@ -347,11 +347,11 @@
               data.badge
                 ? React.createElement(
                     "span",
-                    { className: "inline-block px-4 py-1 rounded-xl bg-blue-600 text-white text-[9px] font-black mb-3 tracking-widest uppercase shadow-md shadow-blue-500/20" },
+                    { className: "inline-block px-3 py-0.5 rounded-xl bg-blue-600 text-white text-[8px] font-black mb-3 tracking-widest uppercase shadow-md shadow-blue-500/20" },
                     data.badge
                   )
                 : null,
-              React.createElement("h2", { className: "text-[28px] md:text-[32px] font-black text-slate-900 tracking-tight leading-[1.15]" }, data.title)
+              React.createElement("h2", { className: "text-[25px] md:text-[30px] font-black text-slate-900 tracking-tight leading-[1.15]" }, data.title)
             ),
 
             // Content
@@ -364,7 +364,7 @@
                     "p",
                     {
                       className:
-                        "text-lg md:text-xl font-black text-slate-800 border-l-[6px] border-blue-500 pl-3 py-0.5 whitespace-pre-line leading-tight"
+                        "text-[16px] md:text-[18px] font-black text-slate-800 border-l-[6px] border-blue-500 pl-3 py-0.5 whitespace-pre-line leading-tight"
                     },
                     data.subtitle
                   )
@@ -373,7 +373,7 @@
               data.description
                 ? React.createElement(
                     "p",
-                    { className: "text-base md:text-lg text-slate-600 font-bold leading-[1.5] whitespace-pre-line tracking-tight" },
+                    { className: "text-[14px] md:text-[16px] text-slate-600 font-bold leading-[1.45] whitespace-pre-line tracking-tight" },
                     data.description
                   )
                 : null,
@@ -385,7 +385,7 @@
                     data.list.map((item, idx) =>
                       React.createElement(
                         "li",
-                        { key: idx, className: "flex items-start gap-3 text-base md:text-lg font-black text-slate-800" },
+                        { key: idx, className: "flex items-start gap-3 text-[14px] md:text-[16px] font-black text-slate-800" },
                         React.createElement(
                           "div",
                           { className: "mt-1 flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shadow-sm" },
@@ -424,23 +424,27 @@
                 : null,
 
               data.steps
-                ? React.createElement(
-                    "div",
-                    { className: "space-y-3 md:space-y-3.5" },
-                    data.steps.map((step, idx) =>
-                      React.createElement(
-                        "div",
-                        { key: idx, className: "flex items-center gap-4 bg-white/40 p-2.5 rounded-[24px] border border-white/50 shadow-sm" },
-                        React.createElement(
-                          "div",
-                          { className: "flex-shrink-0 w-10 h-10 rounded-[14px] bg-slate-900 text-white flex items-center justify-center text-lg font-black shadow-lg" },
-                          idx + 1
-                        ),
-                        React.createElement("div", null, React.createElement("p", { className: "text-base md:text-lg font-black text-slate-800 leading-tight" }, step))
-                      )
-                    )
-                  )
-                : null
+  ? React.createElement(
+      "div",
+      { className: "space-y-2" },
+      data.steps.map((step, idx) =>
+        React.createElement(
+          "div",
+          { key: idx, className: "flex items-center gap-3 bg-white/40 p-2 rounded-[20px] border border-white/50 shadow-sm" },
+          React.createElement(
+            "div",
+            { className: "flex-shrink-0 w-8 h-8 rounded-[12px] bg-slate-900 text-white flex items-center justify-center text-sm font-black shadow-lg" },
+            idx + 1
+          ),
+          React.createElement(
+            "div",
+            null,
+            React.createElement("p", { className: "text-[14px] md:text-[16px] font-black text-slate-800 leading-tight" }, step)
+          )
+        )
+      )
+    )
+  : null
             ),
 
             // Bottom
@@ -676,6 +680,7 @@
     </script>
   </body>
 </html>
+
 
 
 
