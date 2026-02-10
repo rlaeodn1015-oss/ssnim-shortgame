@@ -6,10 +6,8 @@
   <meta name="theme-color" content="#0B5CFF" />
   <title>스승님 X 서수연 프로 숏게임 클래스</title>
 
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Pretendard -->
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 
@@ -29,19 +27,15 @@
       100% { transform: translateY(0px); }
     }
     .floating { animation: float 3s ease-in-out infinite; }
-
-    /* small helper for safe-area */
     .safe-bottom { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
     .fixed-cta-wrap { bottom: calc(3rem + env(safe-area-inset-bottom)); }
   </style>
 
-  <!-- ESM imports -->
   <script type="importmap">
   {
     "imports": {
       "react": "https://esm.sh/react@19.2.0",
-      "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
-      "@google/genai": "https://esm.sh/@google/genai@1.40.0"
+      "react-dom/client": "https://esm.sh/react-dom@19.2.0/client"
     }
   }
   </script>
@@ -51,71 +45,22 @@
   <div id="root"></div>
 
   <script type="module">
-    import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+    import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
     import { createRoot } from "react-dom/client";
-    import { GoogleGenAI } from "@google/genai";
 
-    /***********************
-     * Utilities
-     ***********************/
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const KAKAO_CHAT_URL = "http://pf.kakao.com/_kxawRn/chat";
 
-    function getStoredApiKey() {
-      return localStorage.getItem("SSNIM_GEMINI_API_KEY") || "";
-    }
+    const STATIC_IMAGES = {
+      1: "./images/1.webp",
+      2: "./images/2.webp",
+      3: "./images/3.webp",
+      4: "./images/4.webp",
+      5: "./images/5.webp",
+      6: "./images/6.webp",
+      7: "./images/7.webp",
+      8: "./images/8.webp",
+    };
 
-    function setStoredApiKey(k) {
-      localStorage.setItem("SSNIM_GEMINI_API_KEY", (k || "").trim());
-    }
-
-    async function generateCardImage(prompt, apiKey, maxRetries = 3) {
-      if (!apiKey) return null;
-
-      let attempt = 0;
-      while (attempt <= maxRetries) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-
-          const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-image",
-            contents: { parts: [{ text: prompt }] },
-            config: {
-              imageConfig: { aspectRatio: "4:5" }
-            }
-          });
-
-          const parts = response?.candidates?.[0]?.content?.parts || [];
-          for (const part of parts) {
-            if (part?.inlineData?.data) {
-              return `data:image/png;base64,${part.inlineData.data}`;
-            }
-          }
-          return null;
-        } catch (error) {
-          attempt++;
-          const errStr = JSON.stringify(error || {});
-          const isRateLimit =
-            (error?.message && String(error.message).includes("429")) ||
-            error?.status === 429 ||
-            errStr.includes("429");
-
-          if (isRateLimit && attempt <= maxRetries) {
-            const backoffTime = Math.pow(2, attempt) * 1000; // 2s,4s,8s
-            console.warn(`Rate limit(429). Retry in ${backoffTime}ms... (${attempt}/${maxRetries})`);
-            await sleep(backoffTime);
-            continue;
-          }
-          console.error("Image generation failed:", error);
-          break;
-        }
-      }
-      return null;
-    }
-
-    /***********************
-     * Data (from your constants)
-     * NOTE: You provided 8 pages. If you want 9, tell me and I'll add.
-     ***********************/
     const CARD_PAGES = [
       {
         id: 1,
@@ -127,8 +72,6 @@
         ),
         subtitle: "2026 시즌 대비",
         description: "스승님 X 서수연 프로",
-        backgroundImagePrompt:
-          "A high-quality 3D startup-style illustration of a bright sunny golf course with a clear blue sky. A cute female Korean golf pro character in stylish white and sky blue golf wear (cap and skirt) is standing confidently next to a smiling student golfer who just made a successful putt. A modern golf cart is visible in the background. 4:5 aspect ratio, vibrant colors, 3D render."
       },
       {
         id: 2,
@@ -141,8 +84,6 @@
         ),
         subtitle: "숏게임 하나로 5타 이상 줄이기",
         description: "연습장에서는 프로,\n필드에서는 백돌이.",
-        backgroundImagePrompt:
-          "3D startup style illustration. A male amateur golfer character looking frustrated and holding his head, looking at a golf ball that stopped exactly 1 inch next to the hole cup on a lush green. A friendly female pro character is standing beside him, pointing at the ball and explaining something. Detailed bunker and green background. 4:5 aspect ratio."
       },
       {
         id: 3,
@@ -154,15 +95,11 @@
         ),
         subtitle: "솔루션 제안",
         description: "어프로치 · 벙커 · 퍼팅\n실전만 집중하는 2시간",
-        backgroundImagePrompt:
-          "3D startup style illustration of a professional short game practice zone on a high-end golf course. A female Korean pro golfer is showing the correct swing posture for a wedge shot to a group of cute amateur characters. The sky is bright blue. 4:5 aspect ratio."
       },
       {
         id: 4,
         title: "레슨 특징",
         points: ["✔ 이론 최소", "✔ 실전 집중", "✔ 소수정예 단독", "✔ 날짜 직접 선택"],
-        backgroundImagePrompt:
-          "3D startup style illustration of a professional golf coach area. A whiteboard stands on the green with golf swing trajectory arrows drawn on it. A female pro character is pointing at the board with a golf club. Soft sunlight, blue sky. 4:5 aspect ratio."
       },
       {
         id: 5,
@@ -171,8 +108,6 @@
           { label: "숏게임 레슨", value: "15% 할인" },
           { label: "2인 동반 시", value: "연습장비\n50% 지원", sub: "(연습장비 최대 2만원 / 조건별 적용)" }
         ],
-        backgroundImagePrompt:
-          "3D startup style illustration of a golf practice range entrance, slightly blurred. In the foreground, floating glossy 3D icons of coupons, percentage symbols (%), and shiny gold coins with golf ball textures. Vibrant sky blue and gold theme. 4:5 aspect ratio."
       },
       {
         id: 6,
@@ -183,16 +118,12 @@
           "• 연습장과 필드 차이 느끼는 분",
           "• 친구와 같이 배우고 싶은 분"
         ],
-        backgroundImagePrompt:
-          "3D startup style illustration of four different amateur golfer characters (male and female) standing together on a putting green, looking excited. Speech bubbles above them with icons. Female pro character stands in the center smiling. 4:5 aspect ratio."
       },
       {
         id: 7,
         title: "신청 방법",
         description:
           "하단 [신청하기] 버튼 클릭 →\n카카오톡 채널 채팅으로 바로 연결\n\n원하시는 날짜 말씀 주시면\n레슨 일정 바로 잡아드립니다.",
-        backgroundImagePrompt:
-          "3D startup style illustration of a blurred KakaoTalk chat screen background. A cute amateur character is smiling and touching a smartphone screen with their finger. Clear golf course environment background behind the phone. 4:5 aspect ratio."
       },
       {
         id: 8,
@@ -205,16 +136,10 @@
         subtitle: "3차 앵콜 특별 레슨 (2월 한정)",
         description: "🔥 레슨 스케줄 마감임박!\n\n숏게임이 바뀌면\n여러분의 골프가 달라집니다.",
         hasCta: true,
-        backgroundImagePrompt:
-          "3D startup style illustration of a close-up shot of a golf ball falling into a hole cup. Sunlight is sparkling on the green grass. A wide panoramic view of a beautiful golf course under a sunset-tinged blue sky. 4:5 aspect ratio."
       }
     ];
 
-    /***********************
-     * UI Components
-     ***********************/
     function LoadingScreen({ progress }) {
-      const remain = Math.max(0, Math.round((1 - progress / 100) * 30));
       return (
         React.createElement("div", { className: "fixed inset-0 z-50 flex flex-col items-center justify-center bg-white p-6 text-center" },
           React.createElement("div", { className: "w-24 h-24 mb-6 relative" },
@@ -225,11 +150,7 @@
             )
           ),
           React.createElement("h2", { className: "text-xl font-bold text-gray-800 mb-2" },
-            "서수연 프로의 3D 카드뉴스를", React.createElement("br"), "생성하고 있습니다"
-          ),
-          React.createElement("p", { className: "text-gray-500 mb-8 text-sm" },
-            "잠시만 기다려주시면 멋진 이미지가 준비됩니다.", React.createElement("br"),
-            `(약 ${remain}초 남음)`
+            "카드뉴스를 준비하고 있습니다"
           ),
           React.createElement("div", { className: "w-full max-w-xs bg-gray-100 h-2 rounded-full overflow-hidden" },
             React.createElement("div", {
@@ -322,206 +243,151 @@
       );
     }
 
-    function ApiKeyGate({ onDone }) {
-      const [key, setKey] = useState(getStoredApiKey());
-      const [open, setOpen] = useState(!getStoredApiKey());
-
-      const save = () => {
-        setStoredApiKey(key);
-        setOpen(false);
-        onDone?.();
-      };
-
-      const skip = () => {
-        setOpen(false);
-        onDone?.();
-      };
-
-      if (!open) return null;
-
-      return (
-        React.createElement("div", { className: "fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center p-4" },
-          React.createElement("div", { className: "w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-gray-100" },
-            React.createElement("div", { className: "text-xl font-black text-gray-900 mb-2" }, "Gemini API 키 입력"),
-            React.createElement("p", { className: "text-sm text-gray-600 leading-relaxed mb-4" },
-              "이미지 자동생성을 켜려면 API 키가 필요합니다. (브라우저에 키를 넣으면 노출될 수 있습니다. 운영용은 서버 프록시 권장)"
-            ),
-            React.createElement("input", {
-              className: "w-full rounded-2xl border border-gray-200 px-4 py-3 font-bold outline-none focus:ring-4 focus:ring-blue-100",
-              placeholder: "AIza... 형태",
-              value: key,
-              onChange: (e) => setKey(e.target.value)
-            }),
-            React.createElement("div", { className: "flex gap-3 mt-5" },
-              React.createElement("button", {
-                className: "flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-black active:scale-95 transition",
-                onClick: skip
-              }, "지금은 건너뛰기"),
-              React.createElement("button", {
-                className: "flex-1 py-3 rounded-2xl bg-blue-600 text-white font-black active:scale-95 transition",
-                onClick: save
-              }, "저장하고 시작")
-            )
-          )
-        )
-      );
-    }
-
-    /***********************
-     * Main App
-     ***********************/
     function App() {
-      const [state, setState] = useState({ isGenerating: true, images: {}, progress: 0 });
       const [activePageIndex, setActivePageIndex] = useState(0);
-      const [apiKeyVersion, setApiKeyVersion] = useState(0);
+      const [ready, setReady] = useState(false);
+      const [progress, setProgress] = useState(0);
+      const [cacheBuster, setCacheBuster] = useState(Date.now());
 
-      const apiKey = useMemo(() => getStoredApiKey(), [apiKeyVersion]);
-
-      const initImages = useCallback(async () => {
-        setState((prev) => ({ ...prev, isGenerating: true, progress: 0 }));
-
-        const newImages = {};
-        let count = 0;
-
-        for (const page of CARD_PAGES) {
-          if (count > 0) await sleep(500);
-
-          const url = await generateCardImage(page.backgroundImagePrompt, apiKey);
-          newImages[page.id] = url || `https://picsum.photos/800/1000?random=${page.id}`;
-
-          count++;
-          setState((prev) => ({
-            ...prev,
-            images: { ...newImages },
-            progress: (count / CARD_PAGES.length) * 100
-          }));
+      const images = useMemo(() => {
+        const out = {};
+        for (const p of CARD_PAGES) {
+          const base = STATIC_IMAGES[p.id];
+          out[p.id] = base ? `${base}?v=${cacheBuster}` : "";
         }
+        return out;
+      }, [cacheBuster]);
 
-        setState((prev) => ({ ...prev, isGenerating: false }));
-      }, [apiKey]);
+      const imageList = useMemo(() => Object.values(images).filter(Boolean), [images]);
 
       useEffect(() => {
-        // if no api key, still proceed (picsum fallback)
-        initImages();
-      }, [initImages]);
+        let cancelled = false;
+        let loaded = 0;
+        const total = imageList.length;
 
-      const handleApply = () => {
-        window.open("http://pf.kakao.com/_kxawRn/chat", "_blank");
-      };
+        if (!total) {
+          setProgress(100);
+          setReady(true);
+          return;
+        }
 
-      const nextCard = () => {
-        setActivePageIndex((prev) => Math.min(prev + 1, CARD_PAGES.length - 1));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      };
+        const bump = () => {
+          loaded += 1;
+          const pct = Math.min(100, (loaded / total) * 100);
+          if (!cancelled) setProgress(pct);
+          if (loaded >= total && !cancelled) {
+            setTimeout(() => !cancelled && setReady(true), 200);
+          }
+        };
 
-      const prevCard = () => {
-        setActivePageIndex((prev) => Math.max(prev - 1, 0));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      };
+        setReady(false);
+        setProgress(0);
 
-      // Swipe handling
+        imageList.forEach((src) => {
+          const img = new Image();
+          img.onload = bump;
+          img.onerror = bump;
+          img.src = src;
+        });
+
+        return () => { cancelled = true; };
+      }, [imageList]);
+
+      const handleApply = () => window.open(KAKAO_CHAT_URL, "_blank");
+      const nextCard = () => setActivePageIndex((p) => Math.min(p + 1, CARD_PAGES.length - 1));
+      const prevCard = () => setActivePageIndex((p) => Math.max(p - 1, 0));
+
       const touchRef = useRef({ x: 0, y: 0, t: 0 });
-
       const onTouchStart = (e) => {
         const t = e.touches[0];
         touchRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
       };
+      const onTouchEnd = () => {};
 
-      const onTouchEnd = (e) => {
+      const onTouchEndFixed = (e) => {
         const start = touchRef.current;
         const t = e.changedTouches[0];
         const dx = t.clientX - start.x;
         const dy = t.clientY - start.y;
         const dt = Date.now() - start.t;
 
-        // horizontal swipe threshold
         if (Math.abs(dx) > 50 && Math.abs(dy) < 80 && dt < 600) {
           if (dx < 0) nextCard();
           else prevCard();
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       };
 
-      // if generating and nothing ready, show loading
-      if (state.isGenerating && Object.keys(state.images).length === 0) {
-        return React.createElement(React.Fragment, null,
-          React.createElement(ApiKeyGate, { onDone: () => setApiKeyVersion((v) => v + 1) }),
-          React.createElement(LoadingScreen, { progress: state.progress || 0 })
-        );
+      if (!ready) {
+        return React.createElement(LoadingScreen, { progress });
       }
 
-      const activePage = CARD_PAGES[activePageIndex];
+      const active = CARD_PAGES[activePageIndex];
 
       return (
-        React.createElement(React.Fragment, null,
-          React.createElement(ApiKeyGate, { onDone: () => setApiKeyVersion((v) => v + 1) }),
+        React.createElement("div", {
+          className: "min-h-screen bg-slate-100 flex flex-col items-center",
+          onTouchStart,
+          onTouchEnd: onTouchEndFixed
+        },
+          React.createElement("div", { className: "w-full max-w-md mx-auto min-h-screen flex flex-col shadow-2xl bg-white relative" },
+            React.createElement("div", { className: "flex justify-center gap-2 py-5 bg-white sticky top-0 z-20" },
+              CARD_PAGES.map((_, idx) => (
+                React.createElement("div", {
+                  key: idx,
+                  className: `h-2 rounded-full transition-all duration-300 ${idx === activePageIndex ? "w-8 bg-blue-600" : "w-2 bg-gray-200"}`
+                })
+              ))
+            ),
 
-          React.createElement("div", {
-            className: "min-h-screen bg-slate-100 flex flex-col items-center",
-            onTouchStart,
-            onTouchEnd
-          },
-            React.createElement("div", { className: "w-full max-w-md mx-auto min-h-screen flex flex-col shadow-2xl bg-white relative" },
+            React.createElement("div", { className: "flex-1 p-5 pb-56 overflow-y-auto safe-bottom" },
+              React.createElement(CardPage, { data: active, imageUrl: images[active.id] }),
 
-              /* Top dots */
-              React.createElement("div", { className: "flex justify-center gap-2 py-5 bg-white sticky top-0 z-20" },
-                CARD_PAGES.map((_, idx) => (
-                  React.createElement("div", {
-                    key: idx,
-                    className: `h-2 rounded-full transition-all duration-300 ${idx === activePageIndex ? "w-8 bg-blue-600" : "w-2 bg-gray-200"}`
-                  })
-                ))
-              ),
+              React.createElement("div", { className: "mt-10 flex flex-col items-center gap-6" },
+                activePageIndex < CARD_PAGES.length - 1
+                  ? React.createElement("button", {
+                      onClick: () => { nextCard(); window.scrollTo({ top: 0, behavior: "smooth" }); },
+                      className: "w-full py-5 bg-gray-900 text-white font-black text-lg rounded-[1.5rem] shadow-xl hover:bg-black transition-all active:scale-95"
+                    }, "다음 내용 확인하기 →")
+                  : null,
 
-              /* Content area */
-              React.createElement("div", { className: "flex-1 p-5 pb-56 overflow-y-auto safe-bottom" },
-                React.createElement(CardPage, {
-                  data: activePage,
-                  imageUrl: state.images[activePage.id]
-                }),
+                React.createElement("div", { className: "flex justify-between w-full px-4 mb-6" },
+                  React.createElement("button", {
+                    onClick: () => { prevCard(); window.scrollTo({ top: 0, behavior: "smooth" }); },
+                    disabled: activePageIndex === 0,
+                    className: `text-sm font-black transition-opacity ${activePageIndex === 0 ? "opacity-0" : "opacity-100 text-blue-600"}`
+                  }, "← 이전"),
 
-                React.createElement("div", { className: "mt-10 flex flex-col items-center gap-6" },
-                  activePageIndex < CARD_PAGES.length - 1
-                    ? React.createElement("button", {
-                        onClick: nextCard,
-                        className: "w-full py-5 bg-gray-900 text-white font-black text-lg rounded-[1.5rem] shadow-xl hover:bg-black transition-all active:scale-95"
-                      }, "다음 내용 확인하기 →")
-                    : null,
-
-                  React.createElement("div", { className: "flex justify-between w-full px-4 mb-6" },
-                    React.createElement("button", {
-                      onClick: prevCard,
-                      disabled: activePageIndex === 0,
-                      className: `text-sm font-black transition-opacity ${activePageIndex === 0 ? "opacity-0" : "opacity-100 text-blue-600"}`
-                    }, "← 이전"),
-                    React.createElement("span", { className: "text-sm text-gray-400 font-black tracking-widest" },
-                      `${activePageIndex + 1} / ${CARD_PAGES.length}`
-                    ),
-                    React.createElement("button", {
-                      onClick: () => { setApiKeyVersion((v) => v + 1); initImages(); },
-                      className: "text-sm font-black text-gray-400 hover:text-gray-700"
-                    }, "이미지 재생성")
+                  React.createElement("span", { className: "text-sm text-gray-400 font-black tracking-widest" },
+                    `${activePageIndex + 1} / ${CARD_PAGES.length}`
                   ),
 
-                  React.createElement("div", { className: "text-[11px] text-gray-400 font-bold text-center px-6 -mt-2" },
-                    "좌우로 밀어서 넘길 수 있어요 (스와이프)"
-                  )
-                )
-              ),
-
-              /* Fixed CTA */
-              React.createElement("div", { className: "fixed left-0 right-0 p-5 max-w-md mx-auto z-40 fixed-cta-wrap" },
-                React.createElement("button", {
-                  onClick: handleApply,
-                  className: "w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-[22px] rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-[6px] border-white active:scale-95 transition-all transform hover:-translate-y-1"
-                },
-                  React.createElement("img", {
-                    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
-                    className: "w-8 h-8",
-                    alt: "kakao"
-                  }),
-                  "지금 바로 신청하기"
+                  React.createElement("button", {
+                    onClick: () => setCacheBuster(Date.now()),
+                    className: "text-sm font-black text-gray-400 hover:text-gray-700"
+                  }, "이미지 새로고침")
                 ),
-                React.createElement("p", { className: "text-center mt-3 text-[11px] text-gray-400 font-bold" }, "카카오톡 채널로 즉시 연결됩니다")
+
+                React.createElement("div", { className: "text-[11px] text-gray-400 font-bold text-center px-6 -mt-2" },
+                  "좌우로 밀어서 넘길 수 있어요 (스와이프)"
+                )
+              )
+            ),
+
+            React.createElement("div", { className: "fixed left-0 right-0 p-5 max-w-md mx-auto z-40 fixed-cta-wrap" },
+              React.createElement("button", {
+                onClick: handleApply,
+                className: "w-full py-5 bg-[#FEE500] text-[#3c1e1e] font-black text-[22px] rounded-full shadow-[0_15px_40px_rgba(254,229,0,0.5)] flex items-center justify-center gap-3 border-[6px] border-white active:scale-95 transition-all transform hover:-translate-y-1"
+              },
+                React.createElement("img", {
+                  src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/KakaoTalk_logo.svg/2500px-KakaoTalk_logo.svg.png",
+                  className: "w-8 h-8",
+                  alt: "kakao"
+                }),
+                "지금 바로 신청하기"
+              ),
+              React.createElement("p", { className: "text-center mt-3 text-[11px] text-gray-400 font-bold" },
+                "카카오톡 채널로 즉시 연결됩니다"
               )
             )
           )
@@ -529,11 +395,10 @@
       );
     }
 
-    /***********************
-     * Mount
-     ***********************/
-    const root = createRoot(document.getElementById("root"));
-    root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
+    createRoot(document.getElementById("root")).render(
+      React.createElement(React.StrictMode, null, React.createElement(App))
+    );
   </script>
 </body>
 </html>
+
