@@ -393,17 +393,17 @@
               data.list
                 ? React.createElement(
                     "ul",
-                    { className: "space-y-3 md:space-y-4" },
+                    { className: "space-y-2.5 md:space-y-3" },
                     data.list.map((item, idx) =>
                       React.createElement(
                         "li",
-                        { key: idx, className: "flex items-start gap-3 text-[14px] md:text-[16px] font-black text-slate-800" },
+                        { key: idx, className: "flex items-start gap-2.5 text-[14px] md:text-[16px] font-black text-slate-800 leading-tight" },
                         React.createElement(
                           "div",
-                          { className: "mt-1 flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shadow-sm" },
+                          { className: "mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shadow-sm" },
                           React.createElement(CheckIcon)
                         ),
-                        React.createElement("span", { className: "leading-snug" }, item)
+                        React.createElement("span", { className: "leading-tight" }, item)
                       )
                     )
                   )
@@ -620,7 +620,7 @@
           // Footer
           React.createElement(
             "footer",
-            { className: "px-6 md:px-10 pb-8 md:pb-12 relative z-20 flex flex-col items-center gap-6" },
+            { className: "px-6 md:px-10 pb-8 md:pb-12 relative z-20 flex flex-col items-center gap-8" },
 
             // Promo bar
             React.createElement(
@@ -655,8 +655,7 @@
                 "div",
                 {
                   className:
-                    "absolute -top-11 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
-                },
+                    "absolute -top-14 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
                 "현재 13팀 문의 - 한정 7팀 모집 마감! 🔥"
               ),
 
@@ -692,6 +691,7 @@
     </script>
   </body>
 </html>
+
 
 
 
