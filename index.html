@@ -647,35 +647,40 @@
             ),
 
             // CTA + tooltip
-            React.createElement(
-              "div",
-              { className: "relative w-full max-w-[420px]" },
+            // CTA + tooltip
+React.createElement(
+  "div",
+  { className: "relative w-full max-w-[420px]" },
 
-              React.createElement(
-                "div",
-                {
-                  className:
-                    "absolute -top-14 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
-                "현재 13팀 문의 - 한정 7팀 모집 마감! 🔥"
-              ),
+  React.createElement(
+    "div",
+    {
+      className:
+        "absolute -top-14 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
+    },
+    "현재 13팀 문의 - 한정 7팀 모집 마감! 🔥"
+  ),
 
-              React.createElement(
-                "button",
-                {
-                  onClick: openKakao,
-                  className:
-                    "w-full bg-[#FEE500] hover:bg-[#FADE00] text-[#3C1E1E] h-20 rounded-[26px] flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(254,229,0,0.2)] active:scale-[0.98] transition-all border-b-6 border-[#E6CF00]"
-                },
-                React.createElement("div", { className: "p-2 bg-black/5 rounded-xl" }, React.createElement(KakaoIcon)),
-                React.createElement(
-                  "div",
-                  { className: "flex flex-col items-start" },
-                  React.createElement("span", { className: "text-lg font-black leading-none" }, "숏게임 실전레슨 예약하기"),
-                  React.createElement("span", { className: "text-[9px] font-black opacity-50 tracking-widest uppercase mt-0.5" }, "SSNIM OFFICIAL CHANNEL")
-                )
-              )
-            )
-          ),
+  React.createElement(
+    "button",
+    {
+      onClick: openKakao,
+      className:
+        "w-full bg-[#FEE500] hover:bg-[#FADE00] text-[#3C1E1E] h-20 rounded-[26px] flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(254,229,0,0.2)] active:scale-[0.98] transition-all border-b-6 border-[#E6CF00]"
+    },
+    React.createElement("div", { className: "p-2 bg-black/5 rounded-xl" }, React.createElement(KakaoIcon)),
+    React.createElement(
+      "div",
+      { className: "flex flex-col items-start" },
+      React.createElement("span", { className: "text-lg font-black leading-none" }, "숏게임 실전레슨 예약하기"),
+      React.createElement(
+        "span",
+        { className: "text-[9px] font-black opacity-50 tracking-widest uppercase mt-0.5" },
+        "SSNIM OFFICIAL CHANNEL"
+      )
+    )
+  )
+)
 
           // Top border
           React.createElement("div", { className: "fixed top-0 left-0 w-full h-1.5 bg-blue-600 z-50" })
@@ -691,6 +696,7 @@
     </script>
   </body>
 </html>
+
 
 
 
