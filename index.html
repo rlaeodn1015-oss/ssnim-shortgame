@@ -326,7 +326,11 @@
 
         return React.createElement(
           "div",
-          { className: "relative w-full aspect-[3.7/5] max-w-[420px] mx-auto p-2 flex-shrink-0 snap-center" },
+          {
+  className:
+    "relative w-[92vw] max-w-[420px] mx-auto flex-shrink-0 snap-center " +
+    "h-[56svh] md:h-[64svh] p-2"
+}
           React.createElement(
             "div",
             {
@@ -521,7 +525,7 @@
 
         return React.createElement(
           "div",
-          { className: "fixed inset-0 w-full h-full bg-gradient-to-br from-[#e0f2fe] via-white to-[#f1f5f9] flex flex-col overflow-hidden" },
+          { className: "fixed inset-0 w-full min-h-[100svh] bg-gradient-to-br from-[#e0f2fe] via-white to-[#f1f5f9] flex flex-col overflow-hidden" },
 
           // Background blobs
           React.createElement("div", {
@@ -598,7 +602,7 @@
             {
               ref: scrollRef,
               onScroll: handleScroll,
-              className: "flex-1 overflow-x-auto snap-x snap-mandatory no-scrollbar flex items-center relative z-10"
+              className: "flex-1 min-h-0 overflow-x-auto snap-x snap-mandatory no-scrollbar flex items-start relative z-10"
             },
             React.createElement(
               "div",
@@ -688,3 +692,4 @@
     </script>
   </body>
 </html>
+
