@@ -234,24 +234,28 @@
           iconType: "hole"
         },
         {
-          id: 4,
-          badge: "PRO INTRODUCTION",
-          title: "서수연 프로 숏게임 실전레슨",
-          subtitle: "거리별 어프로치 · 벙커 탈출 · 퍼팅/거리감",
-          description:
-            "단순하고 뻔한 레슨이 아닌\n'감각'과 '기술'을 배우고 직접 필드에서 체감하는 레슨\n\n단 2시간의 집중 레슨으로 숏게임의 실수를\n확실하게 줄여보세요😎\n\n※불만족 시 100% 환불",
-          iconType: "putter"
-        },
-        {
-          id: 5,
-          badge: "FEBRUARY SPECIAL",
-          title: React.createElement("div", { className: "leading-tight" }, "2월 한정 특별 진행"),
-          benefits: [
-            { label: "2026 설 이벤트", value: "최대 혜택 65% 상당", sub: "실전 레슨 예약 시 적용" },
-            { label: "2인 동반 신청 시", value: "연습장비 50% 지원", sub: "(최대 2만원 / 조건별 적용)" }
-          ],
-          iconType: "ball"
-        },
+  id: 5,
+  badge: "APP MEMBER BENEFIT",
+  title: React.createElement("div", { className: "leading-tight" }, "앱 회원 전용 할인가 안내"),
+  benefits: [
+    {
+      label: "APP MEMBER PRICE",
+      value: "정상가 25만원 → 회원가 18만5천원",
+      sub: "2월 한정 / 선착순 기준 (조기 마감 가능)"
+    },
+    {
+      label: "PAIR BENEFIT",
+      value: "2인 동반 신청 시 입장료 지원",
+      sub: "(최대 2만원 / 조건별 적용)"
+    },
+    {
+      label: "TOTAL BENEFIT",
+      value: "총 최대 30% 상당 혜택",
+      sub: "※ 혜택은 타임/인원 상황에 따라 변동·조기마감될 수 있습니다."
+    }
+  ],
+  iconType: "ball"
+},
         {
           id: 6,
           badge: "CHECK LIST",
@@ -648,7 +652,8 @@
                 "div",
                 { className: "flex items-center gap-3" },
                 React.createElement("div", { className: "w-2 h-2 bg-red-500 rounded-full animate-ping" }),
-                React.createElement("p", { className: "text-[13px] font-black text-slate-900 tracking-tight" }, "2월 한정 최대 혜택 65% 상당")
+                React.createElement("p", { className: "text-[13px] font-black text-slate-900 tracking-tight" },
+  "앱 회원가 18만5천원 · 2인 입장료 지원 · 최대 30% 혜택"")
               ),
               React.createElement(
                 "div",
@@ -669,7 +674,7 @@
                   className:
                     "absolute -top-9 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
                 },
-                "현재 13팀 문의 - 한정 7팀 모집 마감! 🔥"
+                "현재 13팀 문의/진행 중 · 선착순 7인 마감 임박 🔥"
               ),
               React.createElement(
                 "button",
@@ -702,5 +707,6 @@
     </script>
   </body>
 </html>
+
 
 
