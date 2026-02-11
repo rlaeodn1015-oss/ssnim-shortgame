@@ -3,10 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>스승님 X 서수연프로 특별 실전레슨</title>
+    <title>스승님 X 서수연스승 | 2월 한정 숏게임 실전레슨</title>
 
-    <meta property="og:title" content="스승님 X 서수연프로 특별 실전레슨" />
-    <meta property="og:description" content="숏게임만 잡아도 스코어가 바뀝니다. 2월 한정 실전 레슨 모집 중" />
+    <!-- OG -->
+    <meta property="og:title" content="스승님 X 서수연스승 | 2월 한정 숏게임 실전레슨" />
+    <meta
+      property="og:description"
+      content="앱 회원 우선 안내 · 정상가 25만원 → 회원가 18만5천원 · 2인 동반 입장료 지원 · 최대 30% 상당 혜택"
+    />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rlaeodn1015-oss.github.io/ssnim-lesson-landing/" />
     <meta property="og:image" content="https://rlaeodn1015-oss.github.io/ssnim-lesson-landing/og.png" />
@@ -29,10 +33,10 @@
           "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
       }
       .glass-card {
-        background: rgba(255, 255, 255, 0.45);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.35);
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
@@ -60,6 +64,7 @@
       import React, { useEffect, useRef, useState } from "react";
       import { createRoot } from "react-dom/client";
 
+      /* ====== Decorative Icons (simple 3D-ish SVG) ====== */
       const GolfBall3D = () =>
         React.createElement(
           "svg",
@@ -178,35 +183,67 @@
       const ChevronLeft = () =>
         React.createElement(
           "svg",
-          { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 3.5, strokeLinecap: "round", strokeLinejoin: "round" },
+          {
+            width: 24,
+            height: 24,
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: 3.5,
+            strokeLinecap: "round",
+            strokeLinejoin: "round"
+          },
           React.createElement("polyline", { points: "15 18 9 12 15 6" })
         );
 
       const ChevronRight = () =>
         React.createElement(
           "svg",
-          { width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 3.5, strokeLinecap: "round", strokeLinejoin: "round" },
+          {
+            width: 24,
+            height: 24,
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: 3.5,
+            strokeLinecap: "round",
+            strokeLinejoin: "round"
+          },
           React.createElement("polyline", { points: "9 18 15 12 9 6" })
         );
 
+      /* ====== Copy (메일 버전과 동일 톤) ====== */
+      const COPY = {
+        headerTitle: "스승님 X 서수연스승",
+        headerSub: "2월 한정 특별 숏게임 실전레슨",
+        urgencyTop: "현재 13팀 문의/진행 중 · 선착순 7인 모집 마감 임박",
+        footerBar: "앱 회원가 18만5천원 · 2인 입장료 지원 · 최대 30% 상당 혜택",
+        ctaTitle: "숏게임 실전레슨 문의/예약",
+        ctaSub: "SSNIM OFFICIAL CHANNEL",
+        kakaoUrl: "http://pf.kakao.com/_kxawRn/chat"
+      };
+
+      /* ====== Cards ====== */
       const CARD_DATA = [
         {
           id: 1,
-          badge: "2026 SEASON SHORT GAME MASTER",
+          badge: "APP MEMBER FIRST NOTICE",
           title: React.createElement(
             "div",
             { className: "leading-tight" },
-            "숏게임만 잘하면",
+            "앱 회원 우선 안내",
             React.createElement("br"),
-            React.createElement("span", { className: "text-blue-600" }, "최소 5타는 무조건"),
+            React.createElement("span", { className: "text-blue-600" }, "2월 한정 특별 숏게임레슨"),
             React.createElement("br"),
-            "줄일 수 있습니다"
+            "선착순 마감"
           ),
-          subtitle: "스승님 X 서수연 스승 숏게임 실전레슨\n\n120건의 후기가 증명하는\n10년간의 노하우 대방출🚨",
+          subtitle:
+            "시즌 시작 전,\n숏게임만 잡아도 스코어가 바뀝니다.\n\n소수정예 운영으로\n조기 마감될 수 있어요.",
           iconType: "ball"
         },
         {
           id: 2,
+          badge: "WHY SHORT GAME",
           title: React.createElement(
             "div",
             { className: "leading-tight text-slate-800" },
@@ -214,81 +251,103 @@
             React.createElement("br"),
             React.createElement("span", { className: "text-red-500" }, "그린 주변에서"),
             React.createElement("br"),
-            "까먹는 스코어..🤯"
+            "스코어 잃는 분들"
           ),
           description:
-            "언제까지 '그린주변' 실수에\n속상해하실 건가요?\n\n이제는 확실한 리커버리가 필요합니다.\n\n2026년 골프 시즌,\n바로 지금부터 완벽하게 준비하세요😊",
+            "연습장에선 괜찮은데\n필드에서 타수가 안 줄어드는 이유,\n대부분 숏게임에서 벌어집니다.\n\n이번 2월, 시즌 전에\n실전 감각을 먼저 만들어 두세요.",
           iconType: "target"
         },
         {
           id: 3,
-          badge: "LOCATION & OPTION",
+          badge: "LOCATION",
           title: React.createElement(
             "div",
             { className: "leading-tight" },
-            "최적의 환경에서",
+            "레슨 장소",
             React.createElement("br"),
-            "진행되는 실전 레슨"
+            "상황에 맞게 진행"
           ),
-          list: ["실내 : 판교 백야드 (최적의 공간)", "야외 : 외부 장소, 파3 레슨 가능", "장소/일정 협의 후 요청자 맞춤 진행", "※원하는 지역/레슨은 따로 문의"],
+          list: [
+            "실내 : 판교 백야드",
+            "야외 : 외부 장소/파3 가능 (개별 문의)",
+            "장소·일정 협의 후 요청자 맞춤 진행",
+            "※원하는 지역/레슨은 따로 문의"
+          ],
           iconType: "hole"
         },
         {
-  id: 5,
-  badge: "APP MEMBER BENEFIT",
-  title: React.createElement("div", { className: "leading-tight" }, "앱 회원 전용 할인가 안내"),
-  benefits: [
-    {
-      label: "APP MEMBER PRICE",
-      value: "정상가 25만원 → 회원가 18만5천원",
-      sub: "2월 한정 / 선착순 기준 (조기 마감 가능)"
-    },
-    {
-      label: "PAIR BENEFIT",
-      value: "2인 동반 신청 시 입장료 지원",
-      sub: "(최대 2만원 / 조건별 적용)"
-    },
-    {
-      label: "TOTAL BENEFIT",
-      value: "총 최대 30% 상당 혜택",
-      sub: "※ 혜택은 타임/인원 상황에 따라 변동·조기마감될 수 있습니다."
-    }
-  ],
-  iconType: "ball"
-},
+          id: 4,
+          badge: "PROGRAM",
+          title: "서수연스승 숏게임 실전레슨",
+          subtitle: "거리별 어프로치 · 벙커 · 퍼팅/거리감",
+          description:
+            "이론은 최소,\n실전에서 바로 쓰는 감각과 기술을\n2시간 집중으로 가져갑니다.\n\n소수정예 프라이빗 방식으로\n피드백 밀도를 높였습니다.",
+          iconType: "putter"
+        },
+        {
+          id: 5,
+          badge: "APP MEMBER BENEFIT",
+          title: React.createElement("div", { className: "leading-tight" }, "앱 회원 전용 할인가 안내"),
+          benefits: [
+            {
+              label: "APP MEMBER PRICE",
+              value: React.createElement(
+                "div",
+                null,
+                React.createElement(
+                  "span",
+                  { className: "text-slate-400 line-through mr-2 text-base md:text-lg font-black" },
+                  "정상가 25만원"
+                ),
+                React.createElement("span", { className: "text-red-600 text-2xl md:text-3xl font-black" }, "회원가 18만5천원")
+              ),
+              sub: "2월 한정 / 선착순 기준 (조기 마감 가능)"
+            },
+            {
+              label: "PAIR BENEFIT",
+              value: "2인 동반 신청 시 입장료 지원",
+              sub: "최대 2만원 / 조건별 적용"
+            },
+            {
+              label: "TOTAL BENEFIT",
+              value: "총 최대 30% 상당 혜택",
+              sub: "※ 혜택은 타임/인원 상황에 따라 변동·조기마감될 수 있습니다."
+            }
+          ],
+          iconType: "ball"
+        },
         {
           id: 6,
-          badge: "CHECK LIST",
-          title: "이런 분들께 추천해요👏🏼",
+          badge: "RECOMMENDED FOR",
+          title: "이런 분들께 추천해요",
           list: [
-            "시즌 첫 라운딩 '백돌이' 탈출",
-            "연습장에선 프로, 필드에선 초보",
-            "3펏이 기본이라 고민인 분",
-            "친구, 지인과 함께 배우고 싶은 분",
-            "골프 내기에서 이기고 싶으신 분",
-            "싱글 스코어가 목표이신 분"
+            "시즌 첫 라운딩, 백돌이 탈출하고 싶은 분",
+            "연습장에선 좋은데 필드에서 흔들리는 분",
+            "3펏/어프로치 실수로 점수 잃는 분",
+            "친구/지인과 함께 (2인) 참여하고 싶은 분",
+            "숏게임 감각을 ‘실전’으로 끌어올리고 싶은 분"
           ],
           iconType: "target"
         },
         {
           id: 7,
-          badge: "REGISTRATION",
-          title: "빠르고 간편한 신청",
-          steps: ["하단 [예약하기] 버튼 클릭", "스승님 카톡 채팅 연결", "희망 날짜/장소/인원 전달", "최종 일정 확정 및 안내"],
+          badge: "HOW TO APPLY",
+          title: "신청/진행 방식",
+          steps: ["하단 [문의/예약] 버튼 클릭", "카카오톡 채팅 연결", "희망 날짜/장소/인원 전달", "확정 안내 후 진행"],
           iconType: "putter"
         },
         {
           id: 8,
-          badge: "LAST CHANCE",
+          badge: "CUSTOM LESSON",
           title: React.createElement(
             "div",
             { className: "leading-tight text-blue-600" },
-            "스코어의 완성은",
+            "맞춤레슨도 가능해요",
             React.createElement("br"),
-            "결국 숏게임✨"
+            "결제 강요 없음"
           ),
           description:
-            "더 이상 고민하지 마세요!\n숏게임이 잡히면 골프의 즐거움이\n완전히 바뀝니다.\n\n후회하지 않을거에요,\n스코어 변화를 직접 경험해보세요😁",
+            "회원님 위치·예산·골프 고민에 맞춰\n조건 맞는 프로만 추천합니다.\n\n‘일단 1회’ 받아보고\n좋으면 그때 결정하셔도 됩니다.",
           iconType: "hole"
         }
       ];
@@ -312,13 +371,13 @@
         const getWatermark = () => {
           switch (data.id) {
             case 1:
-              return "TARGET";
+              return "MEMBER";
             case 2:
               return "SCORE";
             case 3:
               return "PLACE";
             case 4:
-              return "PRO";
+              return "LESSON";
             case 5:
               return "BENEFIT";
             case 6:
@@ -326,7 +385,7 @@
             case 7:
               return "STEP";
             case 8:
-              return "FINISH";
+              return "MATCH";
             default:
               return "GOLF";
           }
@@ -334,16 +393,10 @@
 
         return React.createElement(
           "div",
-          {
-            className:
-              "relative w-[92vw] max-w-[420px] mx-auto flex-shrink-0 snap-center h-[68svh] md:h-[76svh] p-2"
-          },
+          { className: "relative w-[92vw] max-w-[420px] mx-auto flex-shrink-0 snap-center h-[68svh] md:h-[76svh] p-2" },
           React.createElement(
             "div",
-            {
-              className:
-                "glass-card w-full h-full rounded-[48px] shadow-2xl overflow-hidden flex flex-col p-7 md:p-9 relative text-[15px] md:text-[16px]"
-            },
+            { className: "glass-card w-full h-full rounded-[48px] shadow-2xl overflow-hidden flex flex-col p-7 md:p-9 relative text-[15px] md:text-[16px]" },
             React.createElement(
               "div",
               {
@@ -352,11 +405,7 @@
               },
               getWatermark()
             ),
-            React.createElement(
-              "div",
-              { className: "absolute -top-2 -right-2 opacity-30 scale-[1.1] rotate-12 blur-[0.5px]" },
-              renderDecorIcon()
-            ),
+            React.createElement("div", { className: "absolute -top-2 -right-2 opacity-30 scale-[1.1] rotate-12 blur-[0.5px]" }, renderDecorIcon()),
             React.createElement(
               "div",
               { className: "mb-3 md:mb-4 relative z-10" },
@@ -392,10 +441,7 @@
               data.description
                 ? React.createElement(
                     "p",
-                    {
-                      className:
-                        "text-[14px] md:text-[16px] text-slate-600 font-bold leading-[1.35] whitespace-pre-line tracking-tight"
-                    },
+                    { className: "text-[14px] md:text-[16px] text-slate-600 font-bold leading-[1.35] whitespace-pre-line tracking-tight" },
                     data.description
                   )
                 : null,
@@ -408,15 +454,11 @@
                         "li",
                         {
                           key: idx,
-                          className:
-                            "flex items-start gap-2.5 text-[14px] md:text-[16px] font-black text-slate-800 leading-[1.2]"
+                          className: "flex items-start gap-2.5 text-[14px] md:text-[16px] font-black text-slate-800 leading-[1.2]"
                         },
                         React.createElement(
                           "div",
-                          {
-                            className:
-                              "mt-[2px] flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shadow-sm"
-                          },
+                          { className: "mt-[2px] flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shadow-sm" },
                           React.createElement(CheckIcon)
                         ),
                         React.createElement("span", { className: "leading-[1.2]" }, item)
@@ -434,7 +476,7 @@
                         {
                           key: idx,
                           className:
-                            "bg-white/70 p-4 md:p-6 rounded-[32px] border border-white/90 shadow-lg shadow-blue-900/5 relative overflow-hidden"
+                            "bg-white/75 p-4 md:p-6 rounded-[32px] border border-white/90 shadow-lg shadow-blue-900/5 relative overflow-hidden"
                         },
                         React.createElement(
                           "div",
@@ -446,16 +488,12 @@
                           )
                         ),
                         React.createElement(
-                          "p",
+                          "div",
                           { className: "text-xl md:text-2xl font-black text-slate-900 tracking-tight relative z-10" },
                           benefit.value
                         ),
                         benefit.sub
-                          ? React.createElement(
-                              "p",
-                              { className: "text-xs text-slate-500 font-bold mt-1 leading-tight relative z-10" },
-                              benefit.sub
-                            )
+                          ? React.createElement("p", { className: "text-xs text-slate-500 font-bold mt-1 leading-tight relative z-10" }, benefit.sub)
                           : null
                       )
                     )
@@ -470,8 +508,7 @@
                         "div",
                         {
                           key: idx,
-                          className:
-                            "flex items-center gap-3 bg-white/40 p-2 rounded-[20px] border border-white/50 shadow-sm"
+                          className: "flex items-center gap-3 bg-white/45 p-2 rounded-[20px] border border-white/55 shadow-sm"
                         },
                         React.createElement(
                           "div",
@@ -481,15 +518,7 @@
                           },
                           idx + 1
                         ),
-                        React.createElement(
-                          "div",
-                          null,
-                          React.createElement(
-                            "p",
-                            { className: "text-[14px] md:text-[16px] font-black text-slate-800 leading-[1.2]" },
-                            step
-                          )
-                        )
+                        React.createElement("p", { className: "text-[14px] md:text-[16px] font-black text-slate-800 leading-[1.2]" }, step)
                       )
                     )
                   )
@@ -512,7 +541,7 @@
                   React.createElement(
                     "p",
                     { className: "text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1" },
-                    "Elite Training"
+                    "Ssnim Member"
                   ),
                   React.createElement("p", { className: "text-sm font-black text-slate-900" }, "SEO SU-YEON")
                 )
@@ -548,7 +577,7 @@
         };
 
         const openKakao = () => {
-          window.open("http://pf.kakao.com/_kxawRn/chat", "_blank");
+          window.open(COPY.kakaoUrl, "_blank");
         };
 
         useEffect(() => {
@@ -559,24 +588,18 @@
         return React.createElement(
           "div",
           { className: "fixed inset-0 w-full min-h-[100svh] bg-gradient-to-br from-[#e0f2fe] via-white to-[#f1f5f9] flex flex-col overflow-hidden" },
-          React.createElement("div", {
-            className: "absolute top-[-10%] right-[-10%] w-[80%] h-[80%] bg-blue-400/20 blur-[160px] rounded-full animate-pulse"
-          }),
-          React.createElement("div", {
-            className: "absolute bottom-[-10%] left-[-10%] w-[80%] h-[80%] bg-indigo-400/10 blur-[160px] rounded-full"
-          }),
+          React.createElement("div", { className: "absolute top-[-10%] right-[-10%] w-[80%] h-[80%] bg-blue-400/20 blur-[160px] rounded-full animate-pulse" }),
+          React.createElement("div", { className: "absolute bottom-[-10%] left-[-10%] w-[80%] h-[80%] bg-indigo-400/10 blur-[160px] rounded-full" }),
+
+          /* Header */
           React.createElement(
             "header",
             { className: "px-6 md:px-10 pt-8 md:pt-12 pb-1 relative z-10 flex justify-between items-end" },
             React.createElement(
               "div",
               null,
-              React.createElement(
-                "h1",
-                { className: "text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none mb-1" },
-                "스승님 X 서수연프로"
-              ),
-              React.createElement("p", { className: "text-[10px] text-blue-600 font-black uppercase tracking-[0.2em]" }, "Short Game Master Lesson")
+              React.createElement("h1", { className: "text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none mb-1" }, COPY.headerTitle),
+              React.createElement("p", { className: "text-[10px] text-blue-600 font-black uppercase tracking-[0.2em]" }, COPY.headerSub)
             ),
             React.createElement(
               "div",
@@ -584,12 +607,13 @@
               CARD_DATA.map((_, i) =>
                 React.createElement("div", {
                   key: i,
-                  className:
-                    "h-1.5 rounded-full transition-all duration-500 " + (i === activePage ? "w-8 bg-blue-600" : "w-1.5 bg-slate-200")
+                  className: "h-1.5 rounded-full transition-all duration-500 " + (i === activePage ? "w-8 bg-blue-600" : "w-1.5 bg-slate-200")
                 })
               )
             )
           ),
+
+          /* Nav Buttons */
           React.createElement(
             "div",
             { className: "absolute inset-y-0 left-1 w-10 flex items-center justify-center z-30 pointer-events-none" },
@@ -620,13 +644,11 @@
                 )
               : null
           ),
+
+          /* Main */
           React.createElement(
             "main",
-            {
-              ref: scrollRef,
-              onScroll: handleScroll,
-              className: "flex-1 min-h-0 overflow-x-auto snap-x snap-mandatory no-scrollbar flex items-start relative z-10"
-            },
+            { ref: scrollRef, onScroll: handleScroll, className: "flex-1 min-h-0 overflow-x-auto snap-x snap-mandatory no-scrollbar flex items-start relative z-10" },
             React.createElement(
               "div",
               { className: "flex h-fit" },
@@ -639,33 +661,33 @@
               )
             )
           ),
+
+          /* Footer */
           React.createElement(
             "footer",
             { className: "px-6 md:px-10 pb-8 md:pb-12 relative z-20 flex flex-col items-center gap-10" },
+
+            /* Bar */
             React.createElement(
               "div",
               {
                 className:
-                  "w-full max-w-[420px] bg-white/80 backdrop-blur-2xl border-2 border-blue-500/10 py-3 px-5 rounded-[28px] flex items-center justify-between shadow-lg shadow-blue-500/5 relative"
+                  "w-full max-w-[420px] bg-white/85 backdrop-blur-2xl border-2 border-blue-500/10 py-3 px-5 rounded-[28px] flex items-center justify-between shadow-lg shadow-blue-500/5 relative"
               },
               React.createElement(
                 "div",
                 { className: "flex items-center gap-3" },
                 React.createElement("div", { className: "w-2 h-2 bg-red-500 rounded-full animate-ping" }),
-                React.createElement("p", { className: "text-[13px] font-black text-slate-900 tracking-tight" },
-  "앱 회원가 18만5천원 · 2인 입장료 지원 · 최대 30% 혜택"
-                                   )
+                React.createElement("p", { className: "text-[13px] font-black text-slate-900 tracking-tight" }, COPY.footerBar)
               ),
               React.createElement(
-                "div",
-                { className: "flex items-center gap-1" },
-                React.createElement(
-                  "span",
-                  { className: "text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase" },
-                  "마감임박"
-                )
+                "span",
+                { className: "text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase" },
+                "마감임박"
               )
             ),
+
+            /* CTA */
             React.createElement(
               "div",
               { className: "relative w-full max-w-[420px]" },
@@ -675,7 +697,7 @@
                   className:
                     "absolute -top-9 left-1/2 -translate-x-1/2 w-fit bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-xl shadow-lg shadow-red-900/10 whitespace-nowrap animate-bounce z-20 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[8px] after:border-transparent after:border-t-red-600"
                 },
-                "현재 13팀 문의/진행 중 · 선착순 7인 마감 임박 🔥"
+                COPY.urgencyTop
               ),
               React.createElement(
                 "button",
@@ -688,16 +710,14 @@
                 React.createElement(
                   "div",
                   { className: "flex flex-col items-start" },
-                  React.createElement("span", { className: "text-lg font-black leading-none" }, "숏게임 실전레슨 예약하기"),
-                  React.createElement(
-                    "span",
-                    { className: "text-[9px] font-black opacity-50 tracking-widest uppercase mt-0.5" },
-                    "SSNIM OFFICIAL CHANNEL"
-                  )
+                  React.createElement("span", { className: "text-lg font-black leading-none" }, COPY.ctaTitle),
+                  React.createElement("span", { className: "text-[9px] font-black opacity-50 tracking-widest uppercase mt-0.5" }, COPY.ctaSub)
                 )
               )
             )
           ),
+
+          /* Top Progress Bar */
           React.createElement("div", { className: "fixed top-0 left-0 w-full h-1.5 bg-blue-600 z-50" })
         );
       }
@@ -708,7 +728,4 @@
     </script>
   </body>
 </html>
-
-
-
 
