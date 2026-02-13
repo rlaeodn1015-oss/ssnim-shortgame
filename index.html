@@ -171,14 +171,14 @@
           React.createElement("polyline", { points: "20 6 9 17 4 12" })
         );
 
-      const KakaoIcon = () =>
-        React.createElement(
-          "svg",
-          { width: 24, height: 24, viewBox: "0 0 24 24", fill: "#3C1E1E" },
-          React.createElement("path", {
-            d: "M12 3C6.477 3 2 6.48 2 10.791c0 2.76 1.83 5.187 4.59 6.641-.18.63-.66 2.28-.75 2.64-.12.42.12.42.27.33.12-.09 1.95-1.32 2.73-1.83.39.06.78.09 1.17.09 5.523 0 10-3.48 10-7.791C22 6.48 17.523 3 12 3z"
-          })
-        );
+      const NaverIcon = () =>
+React.createElement(
+  "svg",
+  { width: 22, height: 22, viewBox: "0 0 24 24", fill: "white" },
+  React.createElement("path", {
+    d: "M4 3h5.2l5.6 8V3H20v18h-5.2l-5.6-8v8H4V3z"
+  })
+);
 
       const ChevronLeft = () =>
         React.createElement(
@@ -583,9 +583,9 @@
           el.scrollTo({ left: targetIndex * el.clientWidth, behavior: "smooth" });
         };
 
-        const openKakao = () => {
-          window.open(COPY.kakaoUrl, "_blank");
-        };
+        const openForm = () => {
+  window.open("https://naver.me/xfbUquJM", "_blank");
+};
 
         useEffect(() => {
           const t = setTimeout(() => handleScroll(), 50);
@@ -716,11 +716,11 @@
               React.createElement(
                 "button",
                 {
-                  onClick: openKakao,
+                  onClick: openForm,
                   className:
                     "w-full bg-[#03C75A] hover:bg-[#02b351] text-white h-20 rounded-[26px] flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(254,229,0,0.2)] active:scale-[0.98] transition-all border-b-6 border-[#E6CF00]"
                 },
-                React.createElement("div", { className: "p-2 bg-black/5 rounded-xl" }, React.createElement(KakaoIcon)),
+                React.createElement("div", { className: "p-2 bg-black/5 rounded-xl" }, React.createElement(NaverIcon)),
                 React.createElement(
                   "div",
                   { className: "flex flex-col items-start" },
@@ -742,6 +742,7 @@
     </script>
   </body>
 </html>
+
 
 
 
