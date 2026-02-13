@@ -216,7 +216,7 @@
       const COPY = {
         headerTitle: "스승님 X 서수연스승",
         headerSub: "2월 한정 특별 숏게임 실전레슨",
-        urgencyTop: "현재 13팀 문의/진행 중 · 선착순 7인 모집 마감 임박",
+        urgencyTop: "현재 13팀 문의/진행 중 · 선착순 7 모집 마감 임박",
         footerBar: "스승님 이벤트 18만5천원 · 2인 입장료 지원 · 최대 30% 상당 혜택",
         ctaTitle: "숏게임 실전레슨 문의/예약",
         ctaSub: "SSNIM OFFICIAL CHANNEL",
@@ -337,20 +337,27 @@
           iconType: "putter"
         },
         {
-          id: 8,
-          badge: "CUSTOM LESSON",
-          title: React.createElement(
-            "div",
-            { className: "leading-tight text-blue-600" },
-            "맞춤 요청 레슨도 가능해요",
-            React.createElement("br"),
-            "영업 및 결제 강요하지 않아요"
-          ),
-          description:
-            "회원님 위치·예산·골프 고민에 맞춰\n요청에 맞는 스승님만 선별합니다.\n\n‘일단 1회’ 받고\n마음에 들면 결정하세요.",
-          iconType: "hole"
-        }
-      ];
+  id: 8,
+  badge: "LAST CALL",
+  title: React.createElement(
+    "div",
+    { className: "leading-tight" },
+    React.createElement("span", { className: "text-red-600" }, "2월 마지막 7팀"),
+    React.createElement("br"),
+    "지금 신청하시면",
+    React.createElement("br"),
+    React.createElement("span", { className: "text-blue-600" }, "이벤트 혜택 적용"
+    )
+  ),
+  description:
+    "✔ 레슨비 25% 할인\n" +
+    "✔ 2인 동반 시 입장료 지원 (최대 2만원)\n" +
+    "✔ 타임별 최소 2인 진행\n\n" +
+    "신청만 남겨주시면 운영팀이 순차 안내드립니다.",
+  list: ["하단 [문의/예약] 버튼 클릭", "카카오톡 채팅 연결", "성함/인원/레슨유형 전달", "확정 안내 후 진행"],
+  iconType: "ball"
+}
+
 
       function Card({ data }) {
         const renderDecorIcon = () => {
@@ -735,6 +742,7 @@
     </script>
   </body>
 </html>
+
 
 
 
